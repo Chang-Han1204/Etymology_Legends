@@ -1,0 +1,29 @@
+{
+  "lv": 1,
+  "exp": 0,
+  "floor": 1,
+  "totalFloors": 1,
+  "hp": 100,
+  "maxHp": 100,
+  "mp": 50,
+  "maxMp": 50,
+  "atk": 10,
+  "def": 5,
+  "combo": 0,
+  "maxCombo": 0,
+  "wrongStreak": 0,
+  "inventory": [],
+  "equip": {
+    "weapon": null,
+    "armor": null
+  },
+  "relics": [],
+  "stats": {
+    "vocabKills": 0,
+    "grammarKills": 0,
+    "bossKills": 0
+  },
+  "_bonusMaxHp": 0,
+  "_bonusMaxMp": 0,
+  "protectedByPhoenix": false
+}

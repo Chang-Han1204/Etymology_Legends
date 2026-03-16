@@ -1,0 +1,190 @@
+{
+  "potion_small": {
+    "id": "potion_small",
+    "name": "小瓶藥水",
+    "icon": "🧪",
+    "desc": "恢復 30 點 HP",
+    "type": "consumable",
+    "rarity": "common",
+    "effect": {
+      "hp": 30
+    }
+  },
+  "potion_med": {
+    "id": "potion_med",
+    "name": "中瓶藥水",
+    "icon": "🧪",
+    "desc": "恢復 60 點 HP",
+    "type": "consumable",
+    "rarity": "uncommon",
+    "effect": {
+      "hp": 60
+    }
+  },
+  "potion_large": {
+    "id": "potion_large",
+    "name": "大瓶藥水",
+    "icon": "🧪",
+    "desc": "恢復 120 點 HP",
+    "type": "consumable",
+    "rarity": "rare",
+    "effect": {
+      "hp": 120
+    }
+  },
+  "mp_potion": {
+    "id": "mp_potion",
+    "name": "魔力藥水",
+    "icon": "🔮",
+    "desc": "恢復 40 點 MP",
+    "type": "consumable",
+    "rarity": "uncommon",
+    "effect": {
+      "mp": 40
+    }
+  },
+  "elixir": {
+    "id": "elixir",
+    "name": "萬能藥",
+    "icon": "💎",
+    "desc": "完全恢復 HP 和 MP",
+    "type": "consumable",
+    "rarity": "epic",
+    "effect": {
+      "hp": 9999,
+      "mp": 9999
+    }
+  },
+  "wooden_sword": {
+    "id": "wooden_sword",
+    "name": "木劍",
+    "icon": "🗡️",
+    "desc": "基礎武器",
+    "type": "weapon",
+    "rarity": "common",
+    "effect": {
+      "atk": 5
+    }
+  },
+  "iron_sword": {
+    "id": "iron_sword",
+    "name": "鐵劍",
+    "icon": "🗡️",
+    "desc": "堅固的武器",
+    "type": "weapon",
+    "rarity": "uncommon",
+    "effect": {
+      "atk": 12
+    }
+  },
+  "dragon_blade": {
+    "id": "dragon_blade",
+    "name": "龍之刃",
+    "icon": "🗡️",
+    "desc": "傳說武器",
+    "type": "weapon",
+    "rarity": "legendary",
+    "effect": {
+      "atk": 30
+    }
+  },
+  "leather_armor": {
+    "id": "leather_armor",
+    "name": "皮甲",
+    "icon": "🛡️",
+    "desc": "輕便護甲",
+    "type": "armor",
+    "rarity": "common",
+    "effect": {
+      "def": 3
+    }
+  },
+  "chain_mail": {
+    "id": "chain_mail",
+    "name": "鎖子甲",
+    "icon": "🛡️",
+    "desc": "中等防禦",
+    "type": "armor",
+    "rarity": "uncommon",
+    "effect": {
+      "def": 8
+    }
+  },
+  "mage_robe": {
+    "id": "mage_robe",
+    "name": "法師長袍",
+    "icon": "👘",
+    "desc": "增加魔力回復",
+    "type": "armor",
+    "rarity": "rare",
+    "effect": {
+      "mpRegen": 5
+    }
+  },
+  "hp_boost": {
+    "id": "hp_boost",
+    "name": "生命增幅劑",
+    "icon": "💉",
+    "desc": "永久提升 20 點最大 HP",
+    "type": "consumable",
+    "rarity": "rare",
+    "effect": {
+      "maxHpUp": 20
+    }
+  },
+  "mp_boost": {
+    "id": "mp_boost",
+    "name": "魔力增幅劑",
+    "icon": "💉",
+    "desc": "永久提升 15 點最大 MP",
+    "type": "consumable",
+    "rarity": "rare",
+    "effect": {
+      "maxMpUp": 15
+    }
+  },
+  "xp_tome": {
+    "id": "xp_tome",
+    "name": "經驗之書",
+    "icon": "📚",
+    "desc": "獲得 200 點經驗值",
+    "type": "consumable",
+    "rarity": "rare",
+    "effect": {
+      "exp": 200
+    }
+  },
+  "spell_tome": {
+    "id": "spell_tome",
+    "name": "魔法書",
+    "icon": "📖",
+    "desc": "學習新魔法",
+    "type": "consumable",
+    "rarity": "epic",
+    "effect": {
+      "spell": "fireball"
+    }
+  },
+  "treasure_map": {
+    "id": "treasure_map",
+    "name": "藏寶圖",
+    "icon": "🗺️",
+    "desc": "指引寶藏位置",
+    "type": "special",
+    "rarity": "epic",
+    "effect": {
+      "chest": true
+    }
+  },
+  "revive": {
+    "id": "revive",
+    "name": "復活水晶",
+    "icon": "💎",
+    "desc": "復活並恢復 50% 血量",
+    "type": "consumable",
+    "rarity": "legendary",
+    "effect": {
+      "revive": true
+    }
+  }
+}
