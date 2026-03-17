@@ -59,19 +59,6 @@ function onStorageReady() {
   updateEnemyHud();
   updateCharInfo();
   
-  // MP skill button
-  const mpBtn = document.createElement('button');
-  mpBtn.id = 'mp-skill-btn';
-  mpBtn.className = 'btn btn-purple';
-  mpBtn.textContent = 'MP技能';
-  mpBtn.style.display = 'none';
-  mpBtn.addEventListener('click', () => {
-    if (!dAnswered) {
-      useMagic('burst');
-    }
-  });
-  const skillZone = document.getElementById('skill-zone');
-  if (skillZone) skillZone.appendChild(mpBtn);
   
   // MP cooldown
   setInterval(() => {

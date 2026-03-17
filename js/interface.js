@@ -88,26 +88,28 @@ function renderDataPanel() {
   if (f) f.textContent = player.totalFloors || 1;
 }
 
+function renderVList() {
+  const el = document.getElementById('vocab-list');
+  if (el) {
+    el.innerHTML = vWords.map(w => `<div>${w.word} - ${w.def}</div>`).join('');
+  }
+}
+
+function renderGList() {
+  const el = document.getElementById('grammar-list');
+  if (el) {
+    el.innerHTML = gQuestions.map(q => `<div>${q.question} - ${q.options[q.answer]}</div>`).join('');
+  }
+}
+
 let modalFile = '';
 function exportData(type) {
   let data, title, fname;
-  if (type === 'words') {
-    data = vWords;
-    title = '匯出單字庫';
-    fname = 'lexicon2_words.json';
-  } else if (type === 'grammar') {
-    data = gQuestions;
-    title = '匯出文法題庫';
-    fname = 'lexicon2_grammar.json';
-  } else if (type === 'items') {
-    data = ITEMS;
-    title = '匯出道具設定';
-    fname = 'lexicon2_items.json';
-  } else {
-    data = { words: vWords, grammar: gQuestions, vstats: vStats, gstats: gStats, player, items: ITEMS };
-    title = '完整備份';
-    fname = 'lexicon2_backup.json';
-  }
+  // 修改為僅針對角色資訊與進度
+  data = { player, vstats: vStats, gstats: gStats };
+  title = '匯出角色資訊';
+  fname = 'lexicon2_player_backup.json';
+  
   document.getElementById('export-ttl').textContent = title;
   document.getElementById('modal-txt').value = JSON.stringify(data, null, 2);
   modalFile = fname;
@@ -118,108 +120,36 @@ function closeModal() {
   document.getElementById('export-modal').classList.remove('open');
 }
 
-function copyModal() {
-  const ta = document.getElementById('modal-txt');
-  ta.select();
-  try {
-    document.execCommand('copy');
-    toast('✅ 已複製', 'var(--green)');
-  } catch (e) {
-    toast('請手動複製');
-  }
-}
 
-function downloadModal() {
-  const a = document.createElement('a');
-  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(document.getElementById('modal-txt').value);
-  a.download = modalFile;
-  a.click();
-  toast('✅ 下載：' + modalFile, 'var(--green)');
-}
 
-function restoreData() {
-  const raw = document.getElementById('restore-input').value.trim();
-  if (!raw) {
-    alert('請貼上備份');
-    return;
-  }
-  try {
-    const d = JSON.parse(raw);
-    let msg = [];
-    if (Array.isArray(d)) {
-      if (d[0]?.word) {
-        vWords = d;
-        msg.push('單字');
-      } else if (d[0]?.question) {
-        gQuestions = d;
-        msg.push('文法題');
-      }
-    } else {
-      if (d.words) {
-        vWords = d.words;
-        msg.push('單字');
-      }
-      if (d.grammar) {
-        gQuestions = d.grammar;
-        msg.push('文法題');
-      }
-      if (d.vstats) vStats = d.vstats;
-      if (d.gstats) gStats = d.gstats;
-      if (d.player) player = d.player;
-      if (d.items) ITEMS = d.items;
-    }
-    saveAll();
-    updHeader();
-    renderDataPanel();
-    updateStatusPanel();
-    const el = document.getElementById('restore-result');
-    el.textContent = '✅ 還原：' + msg.join('、');
-    el.className = 'import-result ok';
-    document.getElementById('restore-input').value = '';
-    toast('✅ 還原完成', 'var(--green)');
-  } catch (e) {
-    const el = document.getElementById('restore-result');
-    el.textContent = '❌ 失敗：' + e.message;
-    el.className = 'import-result err';
-  }
-}
 
-function clearStat(type) {
-  if (!confirm(`確定清除${type === 'vocab' ? '單字' : '文法'}統計？`)) return;
-  if (type === 'vocab') vStats = { correct: 0, wrong: 0, ws: {} };
-  else gStats = { correct: 0, wrong: 0, ws: {} };
-  saveAll();
-  renderDataPanel();
-  toast('✅ 已清除');
-}
 
-function clearAll(type) {
-  if (!confirm(`確定刪除所有${type === 'words' ? '單字' : '文法題'}？`)) return;
-  if (type === 'words') vWords = [];
-  else gQuestions = [];
-  saveAll();
-  updHeader();
-  renderDataPanel();
-  toast('✅ 已刪除', 'var(--red)');
-}
+
+
+
 
 function resetAll() {
-  if (!confirm('確定完全重置？所有進度、道具、等級都會清空，不可復原。')) return;
-  vWords = DEFAULT_VOCAB.map((w, i) => ({ ...w, id: i + 1 }));
-  gQuestions = DEFAULT_GRAMMAR.map((g, i) => ({ ...g, id: i + 1 }));
-  ITEMS = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+  if (!confirm('確定重置角色？所有等級、進度、道具、統計都會清空，不可復原。 (題庫不會受影響)')) return;
+  
+  // 僅重置統計與角色
   vStats = { correct: 0, wrong: 0, ws: {} };
   gStats = { correct: 0, wrong: 0, ws: {} };
-  player = defPlayer();
+  player = JSON.parse(JSON.stringify(DEFAULT_PLAYER));
+  ensurePlayerIntegrity();
+  
   currentEnemy = null;
-  Dungeon.isBoss = false;
+  if (typeof Dungeon !== 'undefined') Dungeon.isBoss = false;
+  
   saveAll();
   updHeader();
   renderDataPanel();
   updateStatusPanel();
+  updateCharacterInfo();
   updateEnemyHud();
   updateDungeonBar();
-  toast('✅ 已重置', 'var(--gold)');
+  renderInventory();
+  
+  toast('✅ 角色已重置', 'var(--gold)');
 }
 
 function copyModal() {
@@ -298,6 +228,8 @@ function clearStat(type) {
 }
 
 function clearAll(type) {
+  if (!confirm(`確定清除所有${type === 'words' ? '單字' : type === 'grammar' ? '文法題' : type === 'items' ? '道具' : type === 'player' ? '角色資料' : '所有資料'}？`)) return;
+
   if (type === 'words') {
     vWords = [];
     saveJSONFile('data/vocab.json', vWords);
