@@ -27,14 +27,22 @@ function clamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
 }
 
-function toast(msg, col = 'var(--gold)') {
-  const t = document.createElement('div');
+function randomChoice(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return undefined;
+  }
+  const randomIndex = Math.floor(Math.random() * arr.length);
+  return arr[randomIndex];
+}
+
+function toast(msg, col = "var(--gold)") {
+  const t = document.createElement("div");
   t.style.cssText = `position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid ${col};color:${col};padding:9px 18px;font-size:13px;z-index:9999;pointer-events:none;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.6)`;
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => {
-    t.style.transition = 'opacity .3s';
-    t.style.opacity = '0';
+    t.style.transition = "opacity .3s";
+    t.style.opacity = "0";
     setTimeout(() => t.remove(), 300)
   }, 2500);
 }

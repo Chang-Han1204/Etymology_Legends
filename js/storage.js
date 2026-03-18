@@ -21,7 +21,12 @@ const DEFAULT_PLAYER = {
   inventory: [], equip: { weapon: null, armor: null },
   relics: [], stats: { vocabKills: 0, grammarKills: 0, bossKills: 0 },
   _bonusMaxHp: 0, _bonusMaxMp: 0,
-  protectedByPhoenix: false, mpSkillCooldown: 0
+  protectedByPhoenix: false, mpSkillCooldown: 0,
+  gems: 0,
+  upgrades: {
+    // 儲存每個士兵種類的強化等級
+    // 屬性改為 atk, hp, elem (屬性強度)
+  },
 };
 
 const DEFAULT_VSTATS = { correct: 0, wrong: 0, ws: {} };
@@ -205,6 +210,7 @@ function saveGStatsToLS() {
 
 // saveAll：統一儲存介面（全專案呼叫此函數）
 function saveAll() {
+  console.log('[Storage] 儲存所有資料至 localStorage...');
   savePlayerToLS();
   saveVStatsToLS();
   saveGStatsToLS();
@@ -281,11 +287,6 @@ async function initStorage() {
     const rawG = localStorage.getItem(LS_KEYS.gstats);
     gStats = rawG ? JSON.parse(rawG) : { ...DEFAULT_GSTATS };
   } catch (e) { gStats = { ...DEFAULT_GSTATS }; }
-
-  // 觸發遊戲初始化
-  if (typeof onStorageReady === 'function') {
-    onStorageReady();
-  }
 
   // 載入完成提示
   setTimeout(() => {
@@ -370,4 +371,8 @@ if (typeof saveLS === 'undefined') {
 }
 
 // ── 啟動 ──
-initStorage();
+initStorage().then(() => {
+  if (typeof onStorageReady === 'function') {
+    onStorageReady();
+  }
+});

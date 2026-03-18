@@ -1,203 +1,105 @@
 // ══════════════════════════════════════════════
-// DUNGEON SYSTEM
+// DUNGEON SYSTEM (REWRITTEN FOR BATTLE WAVE MODE)
 // ══════════════════════════════════════════════
-const Dungeon = { isBoss: false };
-let currentEnemy = null;
+const Dungeon = {
+  active: false,
+  wave: 1,
+  gold: 0,
+  castleHp: 100,
+  maxCastleHp: 100,
+  soldiers: [],
+  enemies: [],
+  correctCount: 0,
+  isWaveActive: false,
+  waveSpawnTimer: 0,
+  enemiesToSpawn: 0,
+  waveTimer: 0 // 波次倒數計時（秒）
+};
 
-function scaleEnemy(base, floor) {
+// 屬性定義
+const ELEMENTS = {
+  WATER: { id: 'Water', name: '水', color: '#40a0ff', icon: '💧', counters: 'Fire' },
+  FIRE:  { id: 'Fire', name: '火', color: '#ff4040', icon: '🔥', counters: 'Earth' },
+  EARTH: { id: 'Earth', name: '地', color: '#a07040', icon: '🌿', counters: 'Water' }
+};
+
+// 單位類型定義
+// cost: 召喚金幣, hp: 生命值, atk: 攻擊力, speed: 移動速度, range: 攻擊距離, element: 屬性
+const UNIT_TYPES = {
+  warrior:  { name: '戰士', cost: 100, hp: 100, atk: 20, speed: 0.8, sprite: 'player', range: 30, element: 'Earth', elem_strength: 1.0 },
+  skeleton: { name: '骨骸戰士', cost: 150, hp: 120, atk: 25, speed: 0.7, sprite: 'skeleton', range: 35, element: 'Earth', elem_strength: 1.0 },
+  paladin:  { name: '聖騎士', cost: 100, hp: 350, atk: 30, speed: 0.9, sprite: 'paladin', range: 40, element: 'Earth', elem_strength: 1.0 },
+  hero:     { name: '英雄', cost: 100, hp: 500, atk: 60, speed: 1.1, sprite: 'hero', range: 50, element: 'Earth', elem_strength: 1.0 },
+
+  archer:   { name: '弓箭手', cost: 100, hp: 60, atk: 15, speed: 0.6, sprite: 'archer', range: 200, element: 'Water', elem_strength: 1.0 },
+  assassin: { name: '刺客', cost: 250, hp: 70, atk: 40, speed: 1.8, sprite: 'assassin', range: 25, element: 'Water', elem_strength: 1.0 },
+  ghost:    { name: '幽靈刺客', cost: 400, hp: 80, atk: 50, speed: 1.5, sprite: 'ghost', range: 30, element: 'Water', elem_strength: 1.0 },
+  cleric:   { name: '牧師', cost: 100, hp: 100, atk: 30, speed: 0.7, sprite: 'cleric', range: 180, element: 'Water', elem_strength: 1.0 },
+
+  mage:     { name: '魔法師', cost: 100, hp: 50, atk: 25, speed: 0.5, sprite: 'mage', range: 150, element: 'Fire', elem_strength: 1.0 },
+  reaper:   { name: '死神', cost: 350, hp: 150, atk: 65, speed: 1.0, sprite: 'reaper', range: 40, element: 'Fire', elem_strength: 1.0 },
+  knight:   { name: '騎士', cost: 100, hp: 300, atk: 35, speed: 1.0, sprite: 'boss', range: 50, element: 'Fire', elem_strength: 1.0 },
+  dragonlord: { name: '龍領主', cost: 100, hp: 800, atk: 80, speed: 1.0, sprite: 'dragon', range: 60, element: 'Fire', elem_strength: 1.0 }
+};
+
+// 敵人單位類型定義（使用 canvas.js 中現有但未被士兵使用的 sprite）
+const ENEMY_SPECS = {
+  slime:     { name: '史萊姆', baseHp: 40, baseAtk: 6, speed: 0.5, sprite: 'slime' },
+  skeleton:  { name: '骷髏兵', baseHp: 50, baseAtk: 8, speed: 0.6, sprite: 'skeleton' },
+  ghost:     { name: '幽靈', baseHp: 30, baseAtk: 10, speed: 0.8, sprite: 'ghost' },
+  spider:    { name: '蜘蛛', baseHp: 45, baseAtk: 7, speed: 0.7, sprite: 'spider' },
+  demon:     { name: '惡魔', baseHp: 70, baseAtk: 12, speed: 0.6, sprite: 'demon' },
+  dragon:    { name: '幼龍', baseHp: 100, baseAtk: 15, speed: 0.5, sprite: 'dragon' },
+  wyvern:    { name: '飛龍', baseHp: 100, baseAtk: 15, speed: 0.9, sprite: 'wyvern' },
+  fire_wisp: { name: '火焰精靈', baseHp: 30, baseAtk: 20, speed: 1.1, sprite: 'fire_wisp' },
+  ice_golem: { name: '冰魔像', baseHp: 100, baseAtk: 10, speed: 0.3, sprite: 'ice_golem' },
+  mimic:     { name: '寶箱怪', baseHp: 80, baseAtk: 10, speed: 0.4, sprite: 'mimic' }
+};
+
+// 您可以在此調整怪物的成長係數：
+// scale: 生命值隨波次增加比例, atk 隨波次增加比例...等
+function scaleEnemy(base, wave) {
   const e = JSON.parse(JSON.stringify(base));
-  const scale = 1 + (floor || 1) * 0.06;
+  const scale = 1 + (wave - 1) * 0.15; // 波次難度增加
   e.hp = Math.round((e.baseHp || 40) * scale);
   e.maxHp = e.hp;
-  e.atk = Math.round((e.baseAtk || 6) * (1 + (floor || 1) * 0.04));
-  e.def = Math.round((e.baseDef || 2) * (1 + (floor || 1) * 0.04));
+  e.atk = Math.round((e.baseAtk || 6) * (1 + (wave - 1) * 0.1));
+  e.speed = (base.speed || 0.5) * (1 + (wave - 1) * 0.02);
+  e.x = cvW || 600; // 從右側出現
+  e.targetX = 80; // 目標是左側主堡
   return e;
 }
 
-function spawnEnemy(floor, isBoss) {
-  if (isBoss) {
-    const bi = Math.min(Math.floor((floor - 1) / 10), window.BOSSES.length - 1);
-    return scaleEnemy(window.BOSSES[bi], floor);
-  }
-  const tier = Math.min(Math.floor((floor - 1) / 10), window.ENEMIES_TIERS.length - 1);
-  const pool = window.ENEMIES_TIERS[tier];
-  return scaleEnemy(pool[rnd(0, pool.length - 1)], floor);
-}
+function spawnWaveEnemy() {
+  // 根據波次難度，從 ENEMY_SPECS 中選擇敵人
+  const enemyTypes = Object.keys(ENEMY_SPECS);
+  let chosenEnemyType = 'slime'; // 預設為史萊姆
 
-// ── DROP SYSTEM ──
-const DROP_POOLS = {
-  common: ['potion_small', 'wooden_sword', 'leather_armor'],
-  uncommon: ['potion_med', 'iron_sword', 'chain_mail', 'bomb', 'mp_potion', 'hp_boost', 'mp_boost'],
-  rare: ['potion_large', 'magic_staff', 'mage_robe', 'xp_tome', 'treasure_map', 'revive', 'spell_tome'],
-  epic: ['elixir', 'holy_shield', 'dragon_blade', 'revive'],
-  legendary: ['dragon_blade']
-};
+  // 隨著波次增加，出現更強的敵人
+  if (Dungeon.wave > 3) chosenEnemyType = randomChoice(['slime', 'skeleton', 'spider']);
+  if (Dungeon.wave > 6) chosenEnemyType = randomChoice(['skeleton', 'ghost', 'demon']);
+  if (Dungeon.wave > 10) chosenEnemyType = randomChoice(['demon', 'dragon', 'wyvern']);
+  if (Dungeon.wave > 15) chosenEnemyType = randomChoice(['dragon', 'wyvern', 'fire_wisp', 'ice_golem']);
+  if (Dungeon.wave > 20) chosenEnemyType = randomChoice(['wyvern', 'fire_wisp', 'ice_golem', 'mimic']);
 
-function getDropTable(floor) {
-  if (floor >= 30) return [['legendary', .03], ['epic', .12], ['rare', .3], ['uncommon', .35], ['common', .2]];
-  if (floor >= 20) return [['epic', .06], ['rare', .2], ['uncommon', .4], ['common', .34]];
-  if (floor >= 10) return [['rare', .1], ['uncommon', .35], ['common', .55]];
-  return [['uncommon', .2], ['common', .8]];
-}
-
-function openChest(floor = 1) {
-  const table = getDropTable(floor);
-  let roll = Math.random(), rarity = 'common';
-  for (const [r, p] of table) {
-    roll -= p;
-    if (roll <= 0) {
-      rarity = r;
-      break;
-    }
-  }
-  const pool = (DROP_POOLS[rarity] || DROP_POOLS.common).filter(id => ITEMS[id] !== undefined);
-  if (!pool.length) return;
-  const itemId = pool[rnd(0, pool.length - 1)];
-  const item = ITEMS[itemId];
-  if (item === undefined) return;
-  addItem(itemId);
-  document.getElementById('chest-ico').textContent = item.icon;
-  const rarityColors = { common: 'var(--text)', uncommon: '#60e080', rare: '#80b0f0', epic: '#c080f0', legendary: 'var(--gold)' };
-  document.getElementById('chest-nm').textContent = item.name;
-  document.getElementById('chest-nm').style.color = rarityColors[rarity] || 'var(--text)';
-  document.getElementById('chest-desc').textContent = item.desc;
-  document.getElementById('chest-ov').classList.add('show');
-  sfxChest();
-  dLog(`📦 獲得 ${item.icon}${item.name}（${rarity}）`, 'log-gold');
-}
-
-function closeChest() {
-  document.getElementById('chest-ov').classList.remove('show');
-}
-
-function addItem(id) {
-  if (ITEMS[id] === undefined) return;
-  const item = ITEMS[id];
-  const inv = player.inventory;
-  if (item.type === 'consumable' || item.type === 'special') {
-    const ex = inv.find(i => i.id === id);
-    if (ex) ex.qty = (ex.qty || 1) + 1;
-    else inv.push({ id, qty: 1 });
-  } else {
-    // Equipment — add separately (allow multiples)
-    inv.push({ id, qty: 1 });
-  }
-  saveAll();
-}
-
-function useItem(idx) {
-  const invItem = player.inventory[idx];
-  if (!invItem) return;
-  const item = ITEMS[invItem.id];
-  if (item === undefined) return;
-
-  // 使用道具後隱藏詳細資訊提示
-  hideItemTip();
-
-  if (item.type === 'weapon' || item.type === 'armor') {
-    // 檢查是否在地下城中
-    const isDungeonActive = document.getElementById('dq-active').style.display === 'block';
-    if (isDungeonActive) {
-      toast('⚠️ 戰鬥中無法更換裝備，請離開地下城後再裝備。', 'var(--red)');
-      return;
-    }
-    
-    const slot = item.type;
-    player.equip[slot] = invItem.id;
-    // Remove from inventory
-    player.inventory.splice(idx, 1);
-    toast(`⚔️ 裝備：${item.icon} ${item.name}`);
-    updateStatusPanel();
-    saveAll();
-    renderInventory();
-    return;
-  }
-
-  if (item.type === 'consumable') {
-    const e = item.effect || {};
-    if (e.hp) healPlayer(e.hp);
-    if (e.mp) healMp(e.mp);
-    if (e.exp) gainExp(e.exp, cvW / 2, cvH * 0.5);
-    if (e.maxHpUp) {
-      player._bonusMaxHp = (player._bonusMaxHp || 0) + e.maxHpUp;
-      player.maxHp = getMaxHp();
-    }
-    if (e.maxMpUp) {
-      player._bonusMaxMp = (player._bonusMaxMp || 0) + e.maxMpUp;
-      player.maxMp = getMaxMp();
-    }
-    if (e.dmg && currentEnemy) {
-      currentEnemy.hp = Math.max(0, currentEnemy.hp - e.dmg);
-      spawnFloat('-' + e.dmg, cvW * 0.7, cvH * 0.4, 'var(--orange)');
-      triggerHitEffect('enemy');
-      updateEnemyHud();
-    }
-    if (e.chest) openChest(player.floor);
-    // Consume
-    invItem.qty = (invItem.qty || 1) - 1;
-    if (invItem.qty <= 0) player.inventory.splice(idx, 1);
-    saveAll();
-    renderInventory();
-    toast(`🧪 使用：${item.icon} ${item.name}`);
-    return;
-  }
-  if (item.type === 'special' && item.effect?.chest) {
-    openChest(player.floor);
-    invItem.qty = (invItem.qty || 1) - 1;
-    if (invItem.qty <= 0) player.inventory.splice(idx, 1);
-    saveAll();
-    renderInventory();
-  }
-}
-
-function tryRelicDrop(floor) {
-  if (floor % 10 === 0) {
-    const avail = RELICS.filter(r => !player.relics.includes(r.id));
-    if (avail.length > 0) {
-      const r = avail[rnd(0, Math.min(3, avail.length - 1))];
-      player.relics.push(r.id);
-      saveAll();
-      dLog(`✨ 遺物：${r.icon}${r.name} — ${r.desc}`, 'log-gold');
-      toast(`✨ 獲得遺物：${r.name}！`, `var(--purple)`);
-    }
-  }
-  if (hasRelic('relic_moon') && floor % 5 === 0) openChest(floor);
-}
-
-// ── 魔力系統 ──
-let activeMagic = { shield: false, burst: false };
-
-function useMagic(type) {
-  if (dAnswered) return;
+  const baseEnemy = ENEMY_SPECS[chosenEnemyType];
+  const enemy = scaleEnemy(baseEnemy, Dungeon.wave);
   
-  const costs = { shield: 20, burst: 30, heal: 40 };
-  const cost = costs[type];
+  // 隨機分配屬性
+  const elKeys = Object.keys(ELEMENTS);
+  enemy.element = elKeys[Math.floor(Math.random() * elKeys.length)];
   
-  if (player.mp < cost) {
-    toast('MP 不足！', 'var(--red)');
-    return;
+  // 根據屬性調整敵人能力或外觀（可選）
+  if (enemy.element === 'FIRE') {
+    enemy.atk = Math.round(enemy.atk * 1.2); // 火屬性攻擊較高
+  } else if (enemy.element === 'WATER') {
+    enemy.hp = Math.round(enemy.hp * 1.2); // 水屬性生命較高
+    enemy.maxHp = enemy.hp;
+  } else if (enemy.element === 'EARTH') {
+    enemy.speed *= 0.8; // 地屬性速度較慢但可能防禦較高（目前沒防禦屬性，先降速）
   }
   
-  player.mp -= cost;
-  updateStatusPanel();
-  
-  if (type === 'shield') {
-    activeMagic.shield = true;
-    toast('🛡️ 語法護盾已啟動！', 'var(--blue)');
-    dLog('🔮 施放【語法護盾】，將抵擋下次答錯受到的傷害。', 'log-info');
-  } else if (type === 'burst') {
-    activeMagic.burst = true;
-    toast('💥 爆裂魔力充填！', 'var(--purple)');
-    dLog('🔮 施放【爆裂魔力】，下次攻擊傷害大幅提升。', 'log-info');
-  } else if (type === 'heal') {
-    const healAmt = Math.round(getMaxHp() * 0.3);
-    healPlayer(healAmt);
-    toast(`💖 恢復了 ${healAmt} HP`, 'var(--green)');
-    dLog(`🔮 施放【治癒術】，恢復了 ${healAmt} 點生命值。`, 'log-info');
-  }
-  
-  sfxChest(); // 借用音效
-  saveAll();
+  Dungeon.enemies.push(enemy);
 }
 
 // ══════════════════════════════════════════════
@@ -257,8 +159,6 @@ function dqStartInfo() {
   } else { // specific grammar type
     totalCount = grammarCount;
   }
-
-  document.getElementById('dq-info').textContent = `第 ${fl} 層${isBoss ? ' ⚠BOSS' : ''}  |  詞彙 ${vocabCount} 題 · 文法 ${grammarCount} 題（無限模式）`;
   
   // 檢查是否存在「進入地下城」按鈕並禁用它
   const startBtn = document.querySelector('button[onclick*="startDungeon"]');
@@ -336,73 +236,173 @@ function nextQItem() {
 }
 
 function startDungeon() {
-  const fl = player.floor || 1;
-  const isBoss = fl % 10 === 0;
   buildPools();
+  
+  // 如果題庫還沒載入，嘗試等待一下再開始
+  if (vWords.length === 0 && gQuestions.length === 0) {
+    dLog('⏳ 正在載入題庫，請稍候...', 'log-info');
+    setTimeout(startDungeon, 500);
+    return;
+  }
+
   if (vPool.length + gPool.length < 2) {
-    alert('題目不足，請先新增單字或文法題！');
+    alert('題目不足（至少需要 2 題），請先新增單字或文法題！');
     return;
   }
-  dIsBoss = isBoss;
-  currentEnemy = spawnEnemy(fl, isBoss);
-  updateEnemyHud();
-  if (isBoss) {
-    document.getElementById('boss-spr').textContent = currentEnemy.sprite;
-    document.getElementById('boss-nm').textContent = currentEnemy.name;
-    document.getElementById('boss-desc').textContent = currentEnemy.desc || '強大的魔王出現了！';
-    document.getElementById('boss-ov').classList.add('show');
-    sfxBoss();
-    return;
-  }
+  
+  // 初始化戰鬥狀態
+  Dungeon.active = true;
+  Dungeon.wave = 1;
+  Dungeon.gold = 200; // 初始金幣多一點
+  Dungeon.castleHp = 200;
+  Dungeon.maxCastleHp = 200;
+  Dungeon.soldiers = [];
+  Dungeon.enemies = [];
+  Dungeon.correctCount = 0;
+  Dungeon.isWaveActive = false;
+  
+  // 重要：重置題目計數
+  dQTot = 0;
+  dQC = 0;
+  dQW = 0;
+  
   beginBattle();
 }
 
 function beginBattle() {
   document.getElementById('boss-ov').classList.remove('show');
-  
-  // 重置所有戰鬥相關計數器與狀態
-  dQC = 0;
-  dQW = 0;
-  dQTot = 0;
-  dAnswered = false;
-  
-  // 重要：強制還原「繼續」按鈕的點擊事件，防止被上一場戰鬥遺留的狀態改寫
-  const nxtBtn = document.getElementById('dqnxt');
-  if (nxtBtn) {
-    nxtBtn.onclick = nextDQ;
-    nxtBtn.textContent = '繼續 →';
-    nxtBtn.style.display = 'none';
-  }
-
-  // 確保生成新怪物
-  const currentFloor = player.floor || 1;
-  const isBossFloor = currentFloor % 10 === 0;
-  currentEnemy = spawnEnemy(currentFloor, isBossFloor);
-  dIsBoss = isBossFloor;
-
-  updateEnemyHud();
+  const contBtn = document.getElementById('btn-res-continue');
+  if (contBtn) contBtn.style.display = 'block';
   dqshow('dq-active');
-  dLog(`⚔️ ${dIsBoss ? '【BOSS戰！】' : ''}遭遇 ${currentEnemy.name}（HP:${currentEnemy.hp}）`, 'log-warn');
-  renderDQ();
+  dLog(`⚔️ 戰鬥開始！賺取金幣來召喚士兵。`, 'log-warn');
+  
+  updateBattleUI();
+  startNextWave();
+  
+  // 確保題目立即顯示
+  setTimeout(renderDQ, 100);
+  
+  if (!animFrame) renderBattleCanvas();
+}
+
+function startNextWave() {
+  Dungeon.waveSpawnTimer = 0;
+  Dungeon.enemiesToSpawn = 5 + Dungeon.wave * 2;
+  Dungeon.isWaveActive = true;
+  Dungeon.waveTimer = 30 + Dungeon.wave * 5; // 每波基礎 30 秒 + 增量
+  dLog(`🌊 第 ${Dungeon.wave} 波敵人正在靠近...`, 'log-info');
+  updateBattleUI();
+}
+
+function updateBattleUI() {
+  const floorChip = document.getElementById('floor-chip');
+  if (floorChip) floorChip.textContent = `WAVE ${Dungeon.wave}`;
+  
+  const goldDisp = document.getElementById('exp-disp');
+  if (goldDisp) goldDisp.textContent = Dungeon.gold;
+
+  // 更新倒數計時
+  const timerDisp = document.getElementById('wave-timer');
+  if (timerDisp) {
+    const mins = Math.floor(Dungeon.waveTimer / 60);
+    const secs = Math.floor(Dungeon.waveTimer % 60);
+    timerDisp.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  
+  // 更新主堡血量顯示 (重要：確保同步)
+  const phpBar = document.getElementById('php-bar');
+  const phpVal = document.getElementById('php-val');
+  if (phpBar && phpVal) {
+    const pct = Math.max(0, (Dungeon.castleHp / Dungeon.maxCastleHp) * 100);
+    phpBar.style.width = pct + '%';
+    phpVal.textContent = `${Math.max(0, Math.round(Dungeon.castleHp))}/${Dungeon.maxCastleHp}`;
+    phpBar.classList.toggle('low', pct < 30);
+  }
+  
+  // 更新敵方 HUD (顯示剩餘敵人數)
+  const ehudName = document.getElementById('ehud-name');
+  if (ehudName) ehudName.textContent = `剩餘敵人: ${Dungeon.enemiesToSpawn + Dungeon.enemies.length}`;
+  
+  // 檢查波次是否完成，敵人是否清空且時間到期
+  // 此處不處理遊戲結束邏輯，由遊戲主循環判斷
+
+  // 這裡只更新 UI，判斷遊戲勝負的邏輯應在遊戲主循環中
+}
+
+function updateSummonButtons() {
+  // 這部分稍後在 HTML 增加按鈕後實作
+}
+
+function summonSoldier(type) {
+  const spec = UNIT_TYPES[type];
+  if (!spec) return;
+  if (Dungeon.gold < spec.cost) {
+    toast("金幣不足！", "var(--red)");
+    return;
+  }
+  
+  Dungeon.gold -= spec.cost;
+
+  // 應用強化加成
+  const up = player.upgrades?.[type] || { atk: 0, hp: 0, elem: 0 };
+  const bonusAtk = (up.atk || 0) * 5;
+  const bonusHp = (up.hp || 0) * 20;
+  const bonusElem = (up.elem || 0) * 0.05;
+
+  const s = {
+    ...spec,
+    id: type,
+    hp: spec.hp + bonusHp,
+    maxHp: spec.hp + bonusHp,
+    atk: spec.atk + bonusAtk,
+    elem_strength: (spec.elem_strength || 1.0) + bonusElem,
+    x: 75, // 從左側主堡出發
+    targetX: cvW - 100,
+    state: "move",
+    atkTimer: 0,
+    element: spec.element // 確保屬性被正確賦予
+  };
+  Dungeon.soldiers.push(s);
+  updateBattleUI();
+  dLog(`🛡️ 召喚了${spec.name} (LV.${(up.atk||0)+(up.hp||0)+(up.elem||0)})！`, "log-info");
 }
 
 function dqshow(id) {
-  ['dq-start', 'dq-active', 'dq-result'].forEach(s => document.getElementById(s).style.display = s === id ? 'block' : 'none');
+  ['dq-start', 'dq-active', 'dq-result'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = s === id ? 'block' : 'none';
+  });
 }
 
 function renderDQ() {
   dAnswered = false;
   const sz = document.getElementById('skill-zone');
   if (sz) sz.style.display = 'flex'; // 每一題開始時顯示技能區
-  document.getElementById('dqpf').style.width = Math.min(100, dQTot * 5) + '%'; // rough 20q progress
-  document.getElementById('dqpl').textContent = 'Q' + (dQTot + 1);
-  document.getElementById('dqc').textContent = dQC;
-  document.getElementById('dqw').textContent = dQW;
-  document.getElementById('dqnxt').style.display = 'none';
-  document.getElementById('dqfb').style.display = 'none';
+  
+  // 檢查 DOM 元素是否存在
+  const dqpf = document.getElementById('dqpf');
+  if (dqpf) dqpf.style.width = Math.min(100, dQTot * 5) + '%';
+  
+  const dqpl = document.getElementById('dqpl');
+  if (dqpl) dqpl.textContent = 'Q' + (dQTot + 1);
+  
+  const dqc = document.getElementById('dqc');
+  if (dqc) dqc.textContent = dQC;
+  
+  const dqw = document.getElementById('dqw');
+  if (dqw) dqw.textContent = dQW;
+  
+  const dqnxt = document.getElementById('dqnxt');
+  if (dqnxt) dqnxt.style.display = 'none';
+  
+  const dqfb = document.getElementById('dqfb');
+  if (dqfb) dqfb.style.display = 'none';
+
   const qItem = nextQItem();
   if (!qItem || !qItem.data) {
-    dLog('題目已用盡，請新增更多！', 'log-warn');
+    dLog('⚠️ 無法取得題目，請確認題庫是否有足夠內容。', 'log-warn');
+    // 如果在戰鬥中但沒題目，顯示提示
+    document.getElementById('dqcard').innerHTML = `<div class="card" style="text-align:center;color:var(--red2)">題庫載入失敗或內容不足，請返回主選單確認。</div>`;
     return;
   }
   dIsGrammar = qItem.type === 'grammar';
@@ -478,90 +478,37 @@ function renderGrammarQ(q) {
 
 function selDQ(btn, type, sel, cor, evt) {
   if (dAnswered) return;
-  if (!currentEnemy || currentEnemy.hp <= 0) return;
-
   dAnswered = true;
-  const sz = document.getElementById('skill-zone');
-  if (sz) sz.style.display = 'none'; // 作答後隱藏技能區
+  dQTot++; // 增加總題數
   
-  dQTot++;
   const ok = String(sel) === String(cor);
   const q = type === 'vocab' ? vPool[(vIdx - 1 + vPool.length) % vPool.length] : gPool[(gIdx - 1 + gPool.length) % gPool.length];
 
   if (ok) {
     dQC++;
-    player.combo = (player.combo || 0) + 1;
-    if (player.combo > player.maxCombo) player.maxCombo = player.combo;
-    player.wrongStreak = 0;
-    if (hasRelic('relic_phoenix') && player.combo % 5 === 0) player.protectedByPhoenix = true;
-
-    // 玩家攻擊怪物
-    let { dmg, isCrit } = calculateDamage(dIsGrammar, dIsBoss);
+    Dungeon.correctCount = (Dungeon.correctCount || 0) + 1;
+    console.log("[Dungeon] Correct! Current count:", Dungeon.correctCount);
+    const reward = 50 + (player.lv * 5); // 提高獎勵
+    Dungeon.gold += reward;
+    sfxCorrect();
+    spawnFloat(`+$${reward}`, cvW * 0.5, cvH * 0.5, 'var(--gold)');
+    updateBattleUI();
     
-    // 處理爆裂魔法效果
-    if (activeMagic.burst) {
-      dmg = Math.round(dmg * 2.2);
-      isCrit = true; // 強制顯示爆擊特效
-      activeMagic.burst = false;
-      dLog('💥 【爆裂魔法】發動！造成巨大傷害！', 'log-info');
-    }
-
-    currentEnemy.hp = Math.max(0, currentEnemy.hp - dmg);
-    
-    if (isCrit) {
-      triggerCritEffect();
-      sfxCorrect();
-    } else {
-      triggerHitEffect('enemy');
-      sfxCorrect();
-    }
-    
-    // 傷害文字位置修正：顯示在怪物（右側）上方
-    spawnFloat((isCrit ? '暴擊! ' : '') + '-' + dmg, cvW * 0.75, cvH * 0.4, isCrit ? 'var(--orange)' : 'var(--red)');
-    updateEnemyHud();
-
-    // Stats & EXP
-    if (type === 'vocab') {
-      vStats.correct = (vStats.correct || 0) + 1;
-      if (!vStats.ws[q?.word]) vStats.ws[q?.word] = { c: 0, w: 0 };
-      vStats.ws[q.word].c++;
-    } else {
-      gStats.correct = (gStats.correct || 0) + 1;
-      const tag = q?.tag || '其他';
-      if (!gStats.ws[tag]) gStats.ws[tag] = { c: 0, w: 0 };
-      gStats.ws[tag].c++;
-    }
-
-    const xp = Math.round((currentEnemy.exp || 10) * (dIsBoss ? 0.3 : 0.15) * (1 + (dQTot - 1) * 0.03));
-    gainExp(xp, cvW * 0.5, cvH * 0.3); // EXP 顯示位置也修正
-    
-    const ar = player.equip.armor ? ITEMS[player.equip.armor] : null;
-    if (ar?.effect?.mpRegen) healMp(ar.effect.mpRegen);
+    if (type === 'vocab') vStats.correct = (vStats.correct || 0) + 1;
+    else gStats.correct = (gStats.correct || 0) + 1;
   } else {
     dQW++;
-    player.combo = 0;
-    player.wrongStreak = (player.wrongStreak || 0) + 1;
+    // 答錯懲罰：主堡生命減少
+    const penalty = 20 + (player.lv * 5);
+    Dungeon.castleHp -= penalty;
+    sfxWrong(); // 播放錯誤音效
+    spawnFloat(`-${penalty}HP`, 30, cvH * 0.5, 'var(--red)'); // 在主堡位置顯示扣血
+    updateBattleUI(); // 更新 UI 顯示
     
-    // 怪物攻擊玩家
-    const eDmg = calcEnemyDmg();
-    damagePlayer(eDmg); // 內部已包含 spawnFloat 顯示在玩家位置
-
-    if (type === 'vocab') {
-      vStats.wrong = (vStats.wrong || 0) + 1;
-      const wk = q?.word || String(cor);
-      if (!vStats.ws[wk]) vStats.ws[wk] = { c: 0, w: 0 };
-      vStats.ws[wk].w++;
-    } else {
-      gStats.wrong = (gStats.wrong || 0) + 1;
-      const tag = q?.tag || '其他';
-      if (!gStats.ws[tag]) gStats.ws[tag] = { c: 0, w: 0 };
-      gStats.ws[tag].w++;
-    }
-
-    if (hasRelic('relic_crystal') && player.wrongStreak >= 2 && type === 'vocab' && q?.zh) {
-      dLog(`💠 提示：${q.word} = ${q.zh}`, 'log-info');
-    }
+    if (type === 'vocab') vStats.wrong = (vStats.wrong || 0) + 1;
+    else gStats.wrong = (gStats.wrong || 0) + 1;
   }
+
   // Highlight options
   document.querySelectorAll('#dq-active .opt-btn').forEach(b => {
     b.disabled = true;
@@ -574,148 +521,129 @@ function selDQ(btn, type, sel, cor, evt) {
       else if (idx === parseInt(sel) && !ok) b.classList.add('wrong');
     }
   });
+
   // Feedback
   const fb = document.getElementById('dqfb');
   fb.style.display = 'block';
   fb.className = 'fb ' + (ok ? 'ok' : 'no');
-  if (type === 'vocab') {
-    const cWord = ok ? q?.word : String(cor);
-    const cDef = q?.def || '';
-    const cZh = q?.zh || '';
-    fb.innerHTML = ok
-      ? `⚔️ 命中！<button class="spk" onclick="speak('${esc(cWord || '')}')">🔊</button> <strong>${esc(cWord)}</strong>${cZh ? ' (' + esc(cZh) + ')' : ''} — ${mkCW(cDef)}`
-      : `💔 失敗 — 正確：<button class="spk" onclick="speak('${esc(cWord || '')}')">🔊</button> <strong>${esc(cWord)}</strong>${cZh ? ' (' + esc(cZh) + ')' : ''} — ${mkCW(cDef)}`;
-    
-    // 不論對錯都念正確答案的完整句子
-    setTimeout(() => {
-      // 詞彙題：播放填上正確答案後的完整句子
-      const fullSentence = q?.sentence?.replace(/___/g, cWord) || cWord;
-      speak(fullSentence);
-    }, 500);
-  } else {
-    const labels = ['A', 'B', 'C', 'D'];
-    const ci = parseInt(cor);
-    let fbHtml = ok ? `⚔️ 命中！正確：<strong>${labels[ci]}. ${esc(q?.options?.[ci] || '')}</strong>`
-      : `💔 失敗 — 正確：<strong>${labels[ci]}. ${esc(q?.options?.[ci] || '')}</strong>`;
-    if (q?.explain) fbHtml += `<div class="fb-explain">📖 ${esc(q.explain)}</div>`;
-    fb.innerHTML = fbHtml;
-    
-    // 不論對錯都念正確的完整語句
-    setTimeout(() => {
-      // 如果有提供 fullSentence 則朗讀，否則朗讀正確選項
-      const textToSpeak = q?.fullSentence || q?.options?.[ci] || '';
-      speak(textToSpeak);
-    }, 500);
-  }
-  // MP cooldown tick
-  if (player.mpSkillCooldown > 0) player.mpSkillCooldown--;
   
-  // 確保繼續按鈕顯示
-  document.getElementById('dqnxt').style.display = 'inline-flex';
-  updateStatusPanel();
-  saveAll();
-
-  // 檢查怪物是否死亡，如果死亡則修改按鈕行為為「結算」
-  if (currentEnemy && currentEnemy.hp <= 0) {
-    const nxtBtn = document.getElementById('dqnxt');
-    if (nxtBtn) {
-      nxtBtn.onclick = handleEnemyDeath;
-      nxtBtn.textContent = '擊敗敵人！點擊繼續 →';
-    }
-  } else {
-    // 如果怪物還活著，確保按鈕行為是繼續下一題
-    const nxtBtn = document.getElementById('dqnxt');
-    if (nxtBtn) {
-      nxtBtn.onclick = nextDQ;
-      nxtBtn.textContent = '繼續 →';
-    }
+  let explain = '';
+  if (type === 'vocab') {
+    explain = q?.zh || q?.def || '無詳細解釋。';
+  } else { // grammar
+    explain = q?.explain || '無詳細解釋。';
   }
+  
+  if (type === 'vocab') {
+    const cWord = q?.word || '';
+    fb.innerHTML = (ok ? `✅ 答對！+$${50 + player.lv*5}` : `❌ 答錯！正確答案是：<strong>${cWord}</strong>`) +
+                   `<div class="fb-explain">${explain}</div>`;
+    if (q?.sentence) speak(q.sentence.replace(/___/g, cWord));
+  } else {
+    fb.innerHTML = (ok ? `✅ 答對！+$${50 + player.lv*5}` : `❌ 答錯！正確答案是：<strong>${['A','B','C','D'][cor]}</strong>`) +
+                   `<div class="fb-explain">${explain}</div>`;
+  }
+
+  // 顯示「繼續下一題」按鈕
+  const nxt = document.getElementById('dqnxt');
+  if (nxt) nxt.style.display = 'block';
 }
 
 function nextDQ() {
-  if (player.hp <= 0) return;
-  
-  // 如果怪物已經在上一題被打死了，則進入結算流程
-  if (!currentEnemy || currentEnemy.hp <= 0) {
-    handleEnemyDeath();
-    return;
-  }
-  
-  // 確保按鈕事件正確（防禦性編程）
-  const nxtBtn = document.getElementById('dqnxt');
-  if (nxtBtn) {
-    nxtBtn.onclick = nextDQ;
-    nxtBtn.textContent = '繼續 →';
-  }
-  
+  // 在戰鬥模式中，單純渲染下一題
   renderDQ();
 }
 
-function handleEnemyDeath() {
-  if (!currentEnemy) return; // 防止重複觸發
-  
-  const fl = player.floor || 1;
-  dLog(`✅ 擊敗 ${currentEnemy.name}！`, 'log-ok');
-  
-  // 記錄擊殺統計
-  if (dIsBoss) {
-    player.stats.bossKills = (player.stats.bossKills || 0) + 1;
-  } else {
-    // 區分詞彙怪和文法怪
-    if (dIsGrammar) {
-      player.stats.grammarKills = (player.stats.grammarKills || 0) + 1;
-    } else {
-      player.stats.vocabKills = (player.stats.vocabKills || 0) + 1;
-    }
-  }
-  
-  if (Math.random() < (currentEnemy.drop || 0.3)) openChest(fl);
-  tryRelicDrop(fl);
-
-  player.floor = fl + 1;
-  player.totalFloors = Math.max(player.totalFloors || 0, player.floor);
-  
-  currentEnemy = null; // 重要：徹底移除舊對象
-  Dungeon.isBoss = false;
-  
-  updateDungeonBar();
-  updateEnemyHud();
-  updateStatusPanel();
-  saveAll();
-  
-  dqshow('dq-result');
-  document.getElementById('res-ico').textContent = dIsBoss ? '🏆' : '⭐';
-  document.getElementById('res-title').textContent = dIsBoss ? 'BOSS CLEARED!' : 'VICTORY!';
-  document.getElementById('res-score').textContent = dQC + '/' + (dQC + dQW) + ' 答對';
-  document.getElementById('res-msg').textContent = `已前進至第 ${player.floor} 層`;
-  
-  // 更新下一場是否為 Boss 的狀態
-  dIsBoss = player.floor % 10 === 0;
+function continueDungeon() {
+  // 戰鬥模式中的「繼續下一波」
+  Dungeon.wave++;
+  beginBattle();
 }
 
 function exitDungeon() {
-  if (!confirm('確定逃跑？已獲得的 EXP 和道具保留。')) return;
-  player.combo = 0;
-  player.wrongStreak = 0;
-  Dungeon.isBoss = false;
-  currentEnemy = null;
-  // 逃跑後回到當前 10 層的開頭（例如 15 層逃跑回到 11 層）
-  const currentFloor = player.floor || 1;
-  player.floor = Math.max(1, Math.floor((currentFloor - 1) / 10) * 10 + 1);
-  // 逃跑後恢復部分血量和魔力
-  const healAmt = Math.round(getMaxHp() * 0.3);
-  healPlayer(healAmt);
-  healMp(Math.round(getMaxMp() * 0.3));
-  dqshow('dq-start');
-  updateEnemyHud();
-  updateDungeonBar();
+  // 清理戰鬥狀態
+  Dungeon.active = false;
+  Dungeon.soldiers = [];
+  Dungeon.enemies = [];
+  
+  dqshow("dq-start");
   saveAll();
-  dLog('🏃 逃跑了，回到第 ' + player.floor + ' 層...', 'log-warn');
+  dLog("🏃 已返回主選單。", "log-info");
 }
 
 // ══════════════════════════════════════════════
 // DUNGEON LOG
 // ══════════════════════════════════════════════
+function endGame() {
+  console.log("[Dungeon] endGame() called. Dungeon.correctCount:", Dungeon.correctCount);
+  
+  // 確保 player 物件存在且有必要的屬性
+  if (!player) {
+    console.error("Player data not found during endGame");
+    return;
+  }
+  
+  // 遊戲結束時的結算，無論是主堡血量歸零還是提早結束
+  const wavesCompleted = Math.max(0, Dungeon.wave - 1);
+  
+  // 獎勵計算：每個完成波次 10 寶石，本輪每答對 1 題獎勵 2 寶石
+  const rewardGems = (wavesCompleted * 10) + (Dungeon.correctCount * 2);
+  
+  // 增加寶石
+  player.gems = Number(player.gems || 0) + Number(rewardGems);
+  
+  // 更新統計數據
+  player.stats = player.stats || {};
+  player.stats.totalWaves = Number(player.stats.totalWaves || 0) + Number(wavesCompleted);
+  player.stats.totalCorrect = Number(player.stats.totalCorrect || 0) + Number(Dungeon.correctCount);
+  
+  console.log(`[EndGame] Reward: ${rewardGems} gems. Total: ${player.gems}`);
+  
+  // 更新 UI 顯示
+  dqshow("dq-result");
+  
+  // 這裡需要確保在 DOM 更新後再設置文字
+  const updateResultUI = () => {
+    const resIco = document.getElementById("res-ico");
+    if (resIco) resIco.textContent = "";
+    
+    const resTitle = document.getElementById("res-title");
+    if (resTitle) resTitle.textContent = "戰鬥總結";
+    
+    const resScore = document.getElementById("res-score");
+    if (resScore) resScore.textContent = `完成 ${wavesCompleted} 波`;
+    
+    const resMsg = document.getElementById("res-msg");
+    if (resMsg) resMsg.textContent = `本輪答對 ${Dungeon.correctCount} 題，獲得 ${rewardGems} 💎`;
+    
+    // 隱藏繼續按鈕
+    const contBtn = document.getElementById("btn-res-continue");
+    if (contBtn) contBtn.style.display = "none";
+  };
+  
+  updateResultUI();
+  // 雙重保險：如果 UI 還沒出現，等一下再跑一次
+  setTimeout(updateResultUI, 100);
+
+  // 同步更新其他面板 UI
+  const gemStat = document.getElementById("stat-gems");
+  if (gemStat) gemStat.textContent = player.gems;
+  
+  if (typeof renderUpgradeMenu === 'function') renderUpgradeMenu();
+
+  // 記錄日誌
+  dLog(`🎮 戰鬥結束！完成 ${wavesCompleted} 波，本輪答對 ${Dungeon.correctCount} 題，獲得 ${rewardGems} 💎`, "log-gold");
+
+  // 清理狀態
+  Dungeon.active = false;
+  Dungeon.soldiers = [];
+  Dungeon.enemies = [];
+  Dungeon.correctCount = 0; // 重置本輪答對數
+  
+  // 強制儲存
+  saveAll();
+}
+
 function dLog(msg, cls = 'log-info') {
   const log = document.getElementById('dungeon-log');
   if (!log) return;

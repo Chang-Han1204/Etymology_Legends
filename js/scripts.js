@@ -8,7 +8,22 @@ function defPlayer() {
     inventory: [], equip: { weapon: null, armor: null }, relics: [],
     combo: 0, maxCombo: 0, wrongStreak: 0,
     stats: { vocabKills: 0, grammarKills: 0, bossKills: 0 },
-    protectedByPhoenix: false, mpSkillCooldown: 0
+    protectedByPhoenix: false, mpSkillCooldown: 0,
+    gems: 0, // 新增寶石數量
+    upgrades: { // 新增升級屬性
+      warrior: { atk: 0, hp: 0, speed: 0 },
+      skeleton: { atk: 0, hp: 0, speed: 0 },
+      paladin: { atk: 0, hp: 0, speed: 0 },
+      hero: { atk: 0, hp: 0, speed: 0 },
+      archer: { atk: 0, hp: 0, speed: 0 },
+      assassin: { atk: 0, hp: 0, speed: 0 },
+      ghost: { atk: 0, hp: 0, speed: 0 },
+      cleric: { atk: 0, hp: 0, speed: 0 },
+      mage: { atk: 0, hp: 0, speed: 0 },
+      reaper: { atk: 0, hp: 0, speed: 0 },
+      knight: { atk: 0, hp: 0, speed: 0 },
+      dragonlord: { atk: 0, hp: 0, speed: 0 }
+    }
   };
 }
 
@@ -53,7 +68,6 @@ function onStorageReady() {
   renderBattleCanvas();
   updHeader();
   renderDataPanel();
-  dqStartInfo();
   updateStatusPanel();
   updateDungeonBar();
   updateEnemyHud();
@@ -79,9 +93,4 @@ function onStorageReady() {
   setInterval(saveAll, 15000);
   
   console.log('Game initialized successfully');
-}
-
-// 如果 storage.js 已經載入完成，直接初始化
-if (typeof vWords !== 'undefined' && vWords.length > 0) {
-  onStorageReady();
 }

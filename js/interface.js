@@ -86,6 +86,8 @@ function renderDataPanel() {
   if (g) g.textContent = player.stats?.bossKills || 0;
   const f = document.getElementById('stat-total-floors');
   if (f) f.textContent = player.totalFloors || 1;
+  const gems = document.getElementById('stat-gems');
+  if (gems) gems.textContent = player.gems || 0;
 }
 
 function renderVList() {
@@ -119,14 +121,6 @@ function exportData(type) {
 function closeModal() {
   document.getElementById('export-modal').classList.remove('open');
 }
-
-
-
-
-
-
-
-
 
 function resetAll() {
   if (!confirm('確定重置角色？所有等級、進度、道具、統計都會清空，不可復原。 (題庫不會受影響)')) return;
@@ -410,7 +404,7 @@ function updateCharacterInfo() {
 // TABS
 // ══════════════════════════════════════════════
 function mainTab(id) {
-  ['dungeon', 'character', 'data'].forEach(k => {
+  ['dungeon', 'character', 'data', 'upgrade'].forEach(k => {
     const el = document.getElementById('mod-' + k);
     if (el) el.classList.toggle('active', k === id);
   });
@@ -422,11 +416,99 @@ function mainTab(id) {
   if (id === 'character') {
     updateCharacterInfo();
   }
+
+  if (id === 'upgrade') {
+    renderUpgradeMenu();
+  }
   
   // 更新資料子頁面
   if (id === 'data') {
     renderDataPanel();
   }
+}
+
+function renderUpgradeMenu() {
+  const gemsDisp = document.getElementById('upgrade-gems');
+  if (gemsDisp) gemsDisp.textContent = player.gems || 0;
+
+  const list = document.getElementById('upgrade-list');
+  if (!list) return;
+
+  // 動態獲取 UNIT_TYPES 進行渲染
+  const units = Object.keys(UNIT_TYPES);
+  const icons = { 
+    warrior: "🗡️", skeleton: "💀", paladin: "🛡️", hero: "✨",
+    archer: "🏹", assassin: "🔪", ghost: "👻", cleric: "⚕️",
+    mage: "🧙", reaper: "☠️", knight: "🐎", dragonlord: "🐉"
+  };
+
+  list.innerHTML = units.map(id => {
+    const up = player.upgrades[id] || { atk: 0, hp: 0, elem: 0 };
+    const spec = UNIT_TYPES[id];
+    const icon = icons[id] || "🛡️";
+    
+    // 計算各項費用與當前數值 (強化增益: ATK+5, HP+20, ELEM+5%)
+    const curAtk = spec.atk + (up.atk * 5);
+    const curHp = spec.hp + (up.hp * 20);
+    const curElem = 1.0 + (up.elem * 0.05);
+    
+    const costAtk = (up.atk + 1) * 20;
+    const costHp = (up.hp + 1) * 20;
+    const costElem = (up.elem + 1) * 30;
+    
+    // 取得屬性資訊
+    const elKey = spec.element.toUpperCase();
+    const elInfo = ELEMENTS[elKey] || { icon: '❓', color: '#fff' };
+
+    return `
+      <div class="upgrade-item" style="border-left: 4px solid ${elInfo.color}">
+        <div class="upgrade-info">
+          <span class="upgrade-name">${icon} ${spec.name} <small style="color:${elInfo.color}">${elInfo.icon}${elInfo.name}</small></span>
+          <span style="font-size:10px; color:var(--text3)">總等級: ${up.atk + up.hp + up.elem}</span>
+        </div>
+        
+        <div class="upgrade-row">
+          <div class="upgrade-desc">
+            攻擊力: <strong style="color:var(--gold2)">${curAtk}</strong> <small>(LV.${up.atk})</small>
+          </div>
+          <button class="btn btn-sm btn-gold" onclick="buyUpgrade('${id}', 'atk', ${costAtk})">強化 (${costAtk}💎)</button>
+        </div>
+        
+        <div class="upgrade-row">
+          <div class="upgrade-desc">
+            生命值: <strong style="color:var(--green2)">${curHp}</strong> <small>(LV.${up.hp})</small>
+          </div>
+          <button class="btn btn-sm btn-gold" onclick="buyUpgrade('${id}', 'hp', ${costHp})">強化 (${costHp}💎)</button>
+        </div>
+        
+        <div class="upgrade-row">
+          <div class="upgrade-desc" title="提高剋制屬性時的傷害倍率">
+            屬性強度: <strong style="color:var(--cyan2)">x${curElem.toFixed(2)}</strong> <small>(LV.${up.elem})</small>
+          </div>
+          <button class="btn btn-sm btn-gold" onclick="buyUpgrade('${id}', 'elem', ${costElem})">強化 (${costElem}💎)</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function buyUpgrade(unitId, stat, cost) {
+  if ((player.gems || 0) < cost) {
+    toast('💎 寶石不足！', 'var(--red)');
+    return;
+  }
+  
+  player.gems -= cost;
+  if (!player.upgrades[unitId]) player.upgrades[unitId] = { atk: 0, hp: 0, elem: 0 };
+  
+  // 為了向後相容或處理可能的 undefined
+  if (player.upgrades[unitId][stat] === undefined) player.upgrades[unitId][stat] = 0;
+  
+  player.upgrades[unitId][stat]++;
+  
+  saveAll();
+  renderUpgradeMenu();
+  toast('✨ 強化成功！', 'var(--cyan2)');
 }
 
 function subTab(mod, s) {

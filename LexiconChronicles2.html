@@ -8,781 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
-
-<style>
-/* ══════════════════════════════════════════════
-   LEXICON CHRONICLES II — 獵魔村物語 PIXEL THEME
-   ══════════════════════════════════════════════ */
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:        #080810;
-  --bg2:       #0d0d1c;
-  --bg3:       #111122;
-  --panel:     #12121f;
-  --panel2:    #181828;
-  --panel3:    #1e1e33;
-  --border:    #252540;
-  --border2:   #353558;
-
-  --torch:     #c87230;
-  --torch2:    #e89240;
-  --torch3:    #ff b060;
-  --torch-glow: rgba(200,114,48,0.18);
-
-  --text:      #cec3a0;
-  --text2:     #8a7f62;
-  --text3:     #504838;
-  --title:     #ede0bb;
-
-  --gold:      #c89820;
-  --gold2:     #eab830;
-  --red:       #c02030;
-  --red2:      #f03040;
-  --green:     #386830;
-  --green2:    #4cbc4c;
-  --blue:      #204898;
-  --blue2:     #3d7edc;
-  --purple:    #6b2898;
-  --purple2:   #a84adc;
-  --cyan:      #1e8870;
-  --cyan2:     #2ec89a;
-  --orange:    #b85820;
-  --orange2:   #f08030;
-
-  --hp-fill:   #c02030;
-  --hp-low:    #f84000;
-  --mp-fill:   #204898;
-
-  --font-px:   'Press Start 2P', monospace;
-  --font-vt:   'VT323', monospace;
-  --font-silk: 'Silkscreen', monospace;
-}
-
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border2); }
-
-html, body {
-  height: 100%;
-  max-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-vt);
-  font-size: 18px;
-  line-height: 1.4;
-  overflow: hidden;
-}
-
-/* Scanlines */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
-  pointer-events: none; z-index: 9999;
-}
-/* Vignette */
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
-  pointer-events: none; z-index: 9998;
-}
-
-/* ── App ── */
-.app {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 0;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.app-chrome { flex-shrink: 0; }
-.app-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0;
-  min-height: 0;
-}
-.app-body::-webkit-scrollbar { width: 4px; }
-.app-body::-webkit-scrollbar-track { background: var(--bg); }
-.app-body::-webkit-scrollbar-thumb { background: var(--border2); }
-
-/* ══════════════
-   TITLE
-══════════════ */
-.game-title {
-  background: var(--bg2);
-  border: 2px solid var(--torch);
-  border-bottom: none;
-  padding: 8px 14px 6px;
-  position: relative;
-  overflow: hidden;
-}
-.game-title::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, var(--torch-glow) 0%, transparent 30%, transparent 70%, var(--torch-glow) 100%);
-  pointer-events: none;
-}
-/* Corner ornaments */
-.game-title::after {
-  content: '❖ ❖ ❖';
-  position: absolute; bottom: 6px; right: 14px;
-  font-size: 10px; color: var(--torch); opacity: 0.5;
-  letter-spacing: 4px; font-family: var(--font-vt);
-}
-.title-row { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
-
-@keyframes torch-flicker {
-  0%,100% { opacity:1; text-shadow: 0 0 14px var(--torch), 0 0 28px rgba(200,114,48,0.4), 2px 2px 0 #000; }
-  30%     { opacity:.9; text-shadow: 0 0 22px var(--torch2), 0 0 40px rgba(232,146,64,0.3), 2px 2px 0 #000; }
-  60%     { opacity:.88; text-shadow: 0 0 10px var(--torch), 2px 2px 0 #000; }
-  80%     { opacity:.96; text-shadow: 0 0 18px var(--torch2), 2px 2px 0 #000; }
-}
-
-.title-px {
-  font-family: var(--font-px);
-  font-size: 8px;
-  color: var(--torch2);
-  animation: torch-flicker 3.5s ease-in-out infinite;
-  letter-spacing: 1px;
-  line-height: 1.6;
-}
-.title-sub {
-  font-family: var(--font-vt);
-  font-size: 14px;
-  color: var(--text2);
-  letter-spacing: 2px;
-  margin-top: 1px;
-}
-
-/* ══════════════
-   BATTLE CANVAS
-══════════════ */
-.battle-wrap {
-  position: relative;
-  background: var(--bg2);
-  border: 2px solid var(--border2);
-  border-top: 2px solid var(--torch);
-  overflow: hidden;
-  height: 140px;
-}
-#battle-canvas {
-  display: block; width: 100%; height: 140px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-.battle-ui {
-  position: absolute; inset: 0;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  padding: 6px 8px; pointer-events: none;
-}
-
-/* HUDs — anchored to bottom of canvas area */
-.battle-ui {
-  position: absolute; inset: 0;
-  display: flex; justify-content: space-between; align-items: flex-end;
-  padding: 0 0 4px 0; pointer-events: none;
-}
-.player-hud, .enemy-hud {
-  background: rgba(6,6,14,0.93);
-  border: 1px solid var(--border2);
-  border-top: 1px solid var(--torch);
-  padding: 5px 8px;
-  min-width: 120px; max-width: 140px;
-  pointer-events: none; position: relative;
-}
-.player-hud { border-right: none; }
-.enemy-hud  { border-left: none; text-align:right; }
-.player-hud::before { content:''; position:absolute; width:5px;height:5px; background:var(--torch); top:-1px;left:-1px; }
-.enemy-hud::after   { content:''; position:absolute; width:5px;height:5px; background:var(--red); top:-1px;right:-1px; }
-
-.hud-name {
-  font-family: var(--font-silk); font-size: 8px;
-  color: var(--gold2); margin-bottom: 1px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.hud-class {
-  font-family: var(--font-px); font-size: 5px;
-  color: var(--text3); margin-bottom: 4px;
-}
-.hud-hp-row {
-  display: flex; align-items: center; gap: 3px;
-  font-family: var(--font-px); font-size: 5px;
-  color: var(--text3); margin-bottom: 2px;
-}
-.hud-hp-row.right { flex-direction: row-reverse; }
-.hp-bar-wrap, .mp-bar-wrap {
-  height: 6px; flex: 1;
-  background: var(--bg); border: 1px solid var(--border); overflow: hidden;
-}
-.hp-bar-fill {
-  height: 100%;
-  transition: width .3s steps(12);
-}
-.hp-bar-fill.player { background: var(--hp-fill); }
-@keyframes hp-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.hp-bar-fill.player.low { background: var(--hp-low); animation: hp-pulse .7s steps(2) infinite; }
-.hp-bar-fill.enemy  { background: var(--orange); }
-.hp-bar-fill.enemy.low { background: var(--red2); }
-.hp-bar-fill.mp     { background: var(--mp-fill); }
-.hp-val { font-family:var(--font-px); font-size:6px; color:var(--text2); white-space:nowrap; }
-
-/* ══════════════
-   DUNGEON INFO BAR
-══════════════ */
-.dungeon-info {
-  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
-  padding: 4px 8px;
-  background: var(--panel); border: 2px solid var(--border2); border-top: none;
-  font-size: 16px;
-  overflow: hidden;
-}
-.floor-chip {
-  font-family: var(--font-px); font-size: 8px;
-  color: var(--torch2); background: var(--bg);
-  border: 1px solid var(--torch); padding: 3px 8px;
-}
-.boss-warn {
-  font-family: var(--font-px); font-size: 7px; color: var(--red2);
-  animation: hp-pulse .45s steps(2) infinite;
-}
-.floor-track { flex:1; min-width:50px; height:6px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
-.floor-track-fill { height:100%; background: repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 5px,var(--gold2) 5px,var(--gold2) 7px); transition:width .4s steps(8); }
-.d-stat { color: var(--text2); white-space: nowrap; font-family: var(--font-vt); font-size: 18px; }
-
-/* ══════════════
-   MAIN TABS
-══════════════ */
-.main-tabs {
-  display: flex;
-  background: var(--bg); border: 2px solid var(--border2); border-top: none; border-bottom: none;
-}
-.main-tab {
-  flex: 1; padding: 6px 4px;
-  background: var(--panel); border: none; border-right: 1px solid var(--border);
-  color: var(--text3); font-family: var(--font-silk); font-size: 11px;
-  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  letter-spacing: 0.5px; transition: none;
-}
-.main-tab:last-child { border-right: none; }
-.main-tab:hover { background: var(--panel2); color: var(--text2); }
-.main-tab.active { background: var(--panel2); color: var(--torch2); border-bottom: 2px solid var(--torch); }
-.tab-ico { font-size: 15px; }
-
-/* ══════════════
-   SECTIONS
-══════════════ */
-.section {
-  display: none; flex-direction: column; gap: 8px;
-  background: var(--bg2); border: 2px solid var(--border2); border-top: none;
-  padding: 8px;
-}
-.section.active { display: flex; }
-
-/* ══════════════
-   CARDS
-══════════════ */
-.card {
-  background: var(--panel); border: 1px solid var(--border2); padding: 12px 14px;
-  position: relative;
-}
-/* Corner ornaments */
-.card::before, .card::after {
-  content: ''; position: absolute;
-  width: 8px; height: 8px; border: 2px solid var(--border2);
-}
-.card::before { top:-1px;left:-1px; border-right:none;border-bottom:none; }
-.card::after  { top:-1px;right:-1px; border-left:none;border-bottom:none; }
-
-.card-title {
-  font-family: var(--font-px); font-size: 14px; color: var(--torch2);
-  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
-  letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
-}
-.card-title::before { content:'▶'; font-size:14px; color:var(--torch); }
-
-/* ══════════════
-   BUTTONS
-══════════════ */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 9px 16px;
-  background: var(--panel2); color: var(--text);
-  border: 2px solid var(--border2);
-  font-family: var(--font-silk); font-size: 11px;
-  cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-  box-shadow: 3px 3px 0 rgba(0,0,0,.8);
-  user-select: none; transition: none;
-}
-.btn:hover  { transform:translate(-1px,-1px); box-shadow:4px 4px 0 rgba(0,0,0,.8); }
-.btn:active { transform:translate(2px,2px);   box-shadow:1px 1px 0 rgba(0,0,0,.8); }
-.btn:disabled { opacity:.35; cursor:not-allowed; }
-.btn:disabled:hover { transform:none; box-shadow:3px 3px 0 rgba(0,0,0,.8); }
-
-.btn-gold  { background:var(--gold);   color:#080810; border-color:var(--gold2); }
-.btn-red   { background:var(--red);    color:#ffd0d0; border-color:var(--red2);  }
-.btn-blue  { background:var(--blue);   color:#d0e0ff; border-color:var(--blue2); }
-.btn-green { background:var(--green);  color:#d0ffd0; border-color:var(--green2);}
-.btn-purple{ background:var(--purple); color:#f0d0ff; border-color:var(--purple2);}
-.btn-gray  { background:var(--panel3); color:var(--text2); border-color:var(--border2);}
-.btn-sm { padding:5px 10px; font-size:9px; box-shadow:2px 2px 0 rgba(0,0,0,.8); }
-.btn-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-
-/* ══════════════
-   LEVEL BUTTONS
-══════════════ */
-.lvl-group { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
-.lvl-btn {
-  padding: 7px 12px; background: var(--panel2); color: var(--text2);
-  border: 1px solid var(--border); font-family: var(--font-silk); font-size: 11px;
-  cursor: pointer; box-shadow: 2px 2px 0 rgba(0,0,0,.6); transition: none;
-}
-.lvl-btn:hover { background:var(--panel3); color:var(--text); }
-.lvl-btn.on { background:var(--torch); color:#fff8e0; border-color:var(--torch2); }
-
-/* ══════════════
-   QUIZ AREA
-══════════════ */
-.prog-wrap { height:8px; background:var(--bg); border:1px solid var(--border); margin-bottom:8px; overflow:hidden; }
-.prog-fill { height:100%; background: repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 6px,var(--gold2) 6px,var(--gold2) 8px); transition:width .3s steps(10); }
-
-.q-card {
-  background: var(--panel); border: 2px solid var(--border2); padding: 10px 12px;
-  position: relative;
-}
-.q-card::before, .q-card::after {
-  content:''; position:absolute; width:10px;height:10px; border:2px solid var(--torch);
-}
-.q-card::before { top:-1px;left:-1px; border-right:none;border-bottom:none; }
-.q-card::after  { bottom:-1px;right:-1px; border-left:none;border-top:none; }
-
-.q-head {
-  font-family: var(--font-silk); font-size: 11px; color: var(--torch2);
-  margin-bottom: 8px; letter-spacing: 1px;
-  display: flex; align-items: center; gap: 8px;
-}
-
-/* ══ 所有題型的題目文字 — 完全統一，用 !important 覆蓋 dungeon.js inline styles ══ */
-/* 詞彙題用 .q-text，文法題也用 .q-text + 各 class，一律強制相同外觀 */
-.q-text,
-.q-text.email-box,
-.q-text.define-box,
-.q-text.dialogue-box,
-.email-box,
-.define-box,
-.dialogue-box {
-  font-family: var(--font-vt) !important;
-  font-size: 24px !important;
-  color: var(--title) !important;
-  font-style: normal !important;
-  font-weight: normal !important;
-  line-height: 1.5 !important;
-  margin-bottom: 8px !important;
-  /* 清除 dungeon.js 加上的各種 background / border / padding / border-radius */
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  text-align: left !important;
-}
-
-/* 詞彙填空底線 */
-.q-blank {
-  display: inline-block; min-width: 72px;
-  border-bottom: 3px solid var(--gold); margin: 0 3px; vertical-align: bottom;
-  background: linear-gradient(transparent 65%, rgba(200,152,32,0.18) 100%) !important;
-}
-
-/* 對話題的每行文字也統一 */
-.chat-msg {
-  font-family: var(--font-vt) !important;
-  font-size: 24px !important;
-  color: var(--title) !important;
-  font-style: normal !important;
-  font-weight: normal !important;
-  line-height: 1.5 !important;
-  margin-bottom: 2px;
-}
-/* prompt 行（B: Select...）稍微暗一點就夠了 */
-.chat-msg.prompt { color: var(--text2) !important; }
-
-/* 選項按鈕 — 所有題型完全相同 */
-.opt-btn {
-  display: block; width: 100%; padding: 10px 14px; margin-bottom: 6px;
-  background: var(--panel2); color: var(--title); border: 1px solid var(--border);
-  font-family: var(--font-vt) !important; font-size: 28px !important;
-  text-align: left; cursor: pointer;
-  box-shadow: 2px 2px 0 rgba(0,0,0,.6); line-height: 1.3; transition: none;
-}
-.opt-btn:hover:not(:disabled) {
-  background: var(--panel3); border-color: var(--torch); color: var(--title);
-  transform: translateX(3px);
-}
-.opt-btn:disabled { cursor: not-allowed; }
-.opt-btn.correct { background:rgba(56,104,48,.3)!important; border-color:var(--green2)!important; color:var(--green2)!important; }
-.opt-btn.correct::before { content:'✔ '; }
-.opt-btn.wrong   { background:rgba(192,32,48,.3)!important; border-color:var(--red2)!important; color:var(--red2)!important; }
-.opt-btn.wrong::before   { content:'✖ '; }
-
-/* 文法選項的 A. B. C. D. 標籤：dungeon.js 用 <strong style="color:var(--cyan)">
-   strong 本身會 bold — 清掉 bold，讓它跟詞彙選項文字一樣 */
-.opt-btn strong {
-  font-weight: normal !important;
-  font-family: var(--font-vt) !important;
-  font-size: 28px !important;
-  color: var(--text2) !important;  /* 淡一點，讓選項內容更突出 */
-}
-
-/* 詞性標籤 [noun] [verb] 等（詞彙題） */
-.opt-btn span {
-  font-family: var(--font-vt) !important;
-  font-size: 24px !important;
-  color: var(--text2) !important;
-}
-
-/* 回饋框 */
-.fb {
-  margin-top: 6px; padding: 8px 12px;
-  font-family: var(--font-vt) !important; font-size: 18px !important;
-  line-height: 1.45; border: 1px solid;
-}
-.fb.ok { background:rgba(56,104,48,.18); border-color:var(--green2); color:var(--green2); }
-.fb.no { background:rgba(192,32,48,.18); border-color:var(--red2); color:#ffb8b8; }
-/* 正確答案的 <strong> */
-.fb strong {
-  font-weight: normal !important;
-  font-family: var(--font-vt) !important;
-  font-size: 20px !important;
-  color: var(--gold2) !important;
-}
-.fb.ok strong { color: var(--green2) !important; }
-.fb.no strong { color: var(--gold2) !important; }
-/* 解說文字 */
-.fb-explain {
-  margin-top: 6px;
-  font-family: var(--font-vt) !important; font-size: 18px !important;
-  color: var(--text2) !important;
-  border-top: 1px solid var(--border); padding-top: 5px;
-  line-height: 1.45;
-}
-
-.spk { background:none; border:1px solid var(--border); padding:2px 5px; font-size:14px; cursor:pointer; vertical-align:middle; color:var(--text2); }
-.spk:hover { border-color:var(--cyan); color:var(--cyan2); }
-
-/* Skill zone */
-#skill-zone { margin-top:.75rem; display:flex; gap:8px; justify-content:center; }
-
-/* ══════════════
-   DUNGEON LOG
-══════════════ */
-.dlog {
-  background:var(--bg); border:1px solid var(--border);
-  height:120px; overflow-y:auto; padding:8px;
-  font-family:var(--font-vt); font-size:14px; line-height:1.65;
-}
-.dlog>div { padding:1px 0; border-bottom:1px solid rgba(37,37,64,.3); }
-.log-info  { color:var(--text2); }
-.log-ok    { color:var(--green2); }
-.log-warn  { color:var(--orange2); }
-.log-gold  { color:var(--gold2); }
-.log-blue  { color:var(--blue2); }
-
-/* ══════════════
-   STATS GRID
-══════════════ */
-.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
-.stat-box {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 10px 12px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: none;
-}
-.stat-box::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--border2);
-}
-.stat-box:hover { border-color: var(--torch); }
-.stat-box:hover::before { background: var(--torch); }
-.stat-ico { font-size: 22px; line-height: 1; flex-shrink: 0; }
-.stat-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.stat-lbl { font-family: var(--font-silk); font-size: 12px; color: var(--text2); letter-spacing: 0.5px; display: block; }
-.stat-val { font-family: var(--font-vt); font-size: 24px; color: var(--gold2); font-weight: bold; line-height: 1; }
-
-/* ══════════════
-   MODALS
-══════════════ */
-.modal-ov {
-  position:fixed; inset:0; background:rgba(0,0,0,.88);
-  display:none; align-items:center; justify-content:center; z-index:500; padding:16px;
-}
-.modal-ov.open { display:flex; }
-.modal {
-  background:var(--panel); border:2px solid var(--torch); padding:16px;
-  max-width:560px; width:100%; max-height:88vh; overflow-y:auto; position:relative;
-}
-.modal::before,.modal::after { content:''; position:absolute; width:16px;height:16px; border:3px solid var(--torch); }
-.modal::before { top:-1px;left:-1px; border-right:none;border-bottom:none; }
-.modal::after  { bottom:-1px;right:-1px; border-left:none;border-top:none; }
-.modal-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border2); }
-.modal-ttl { font-family:var(--font-px); font-size:9px; color:var(--torch2); letter-spacing:1px; }
-.inv-section-title { font-family:var(--font-px); font-size:7px; color:var(--text2); margin:12px 0 8px; letter-spacing:1px; padding-bottom:5px; border-bottom:1px solid var(--border); }
-
-/* ── Inventory Grid ── */
-.inv-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
-.inv-slot {
-  aspect-ratio:1; background:var(--bg); border:1px solid var(--border);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  cursor:pointer; padding:5px 3px; position:relative; text-align:center; transition:none;
-}
-.inv-slot:hover:not(.empty) { border-color:var(--torch); background:var(--panel2); }
-.inv-slot .ico { font-size:22px; line-height:1; }
-.inv-slot .nm { font-family:var(--font-px); font-size:5px; color:var(--text2); margin-top:3px; text-align:center; word-break:break-all; line-height:1.3; }
-.inv-slot .qty { position:absolute; bottom:2px;right:3px; font-family:var(--font-px); font-size:6px; color:var(--gold); }
-.inv-slot.empty { opacity:.25; cursor:default; }
-.rarity-uncommon { border-color:var(--green); }
-.rarity-rare     { border-color:var(--blue2); }
-.rarity-epic     { border-color:var(--purple2); }
-.rarity-legendary{ border-color:var(--gold2); box-shadow:0 0 6px var(--gold); }
-.equipped-badge { position:absolute; top:1px;left:1px; font-family:var(--font-px); font-size:4px; background:var(--torch); color:#fff; padding:1px 2px; }
-
-/* ── Relic Grid ── */
-.relic-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
-.relic-slot { background:var(--bg); border:1px solid var(--border); padding:10px; text-align:center; }
-.relic-slot.active { border-color:var(--purple2); background:rgba(107,40,152,.1); }
-.r-ico  { font-size:22px; margin-bottom:5px; }
-.r-nm   { font-family:var(--font-px); font-size:6px; color:var(--purple2); margin-bottom:4px; letter-spacing:.5px; }
-.r-desc { font-family:var(--font-vt); font-size:15px; color:var(--text2); line-height:1.4; }
-
-/* ── Item Tooltip ── */
-.item-tip { position:fixed; background:var(--panel); border:1px solid var(--torch); padding:10px 12px; max-width:220px; z-index:600; pointer-events:none; box-shadow:4px 4px 0 rgba(0,0,0,.7); }
-.item-tip-nm   { font-family:var(--font-px); font-size:8px; color:var(--gold2); margin-bottom:6px; }
-.item-tip-desc { font-family:var(--font-vt); font-size:18px; color:var(--text); margin-bottom:4px; }
-.item-tip-type { font-family:var(--font-vt); font-size:16px; }
-
-/* ══════════════
-   OVERLAYS
-══════════════ */
-.boss-ov, .dead-ov, .chest-ov, .lu-ov {
-  position:fixed; inset:0; background:rgba(0,0,0,.92);
-  display:none; align-items:center; justify-content:center; z-index:400;
-}
-.boss-ov.show,.dead-ov.show,.chest-ov.show,.lu-ov.show { display:flex; }
-
-.boss-box {
-  background:var(--panel); border:3px solid var(--red); padding:28px 32px;
-  text-align:center; max-width:340px; width:90%; position:relative;
-}
-.boss-box::before,.boss-box::after { content:''; position:absolute; width:18px;height:18px; border:3px solid var(--red); }
-.boss-box::before { top:-1px;left:-1px; border-right:none;border-bottom:none; }
-.boss-box::after  { bottom:-1px;right:-1px; border-left:none;border-top:none; }
-.boss-title { font-family:var(--font-px); font-size:9px; color:var(--red2); margin-bottom:14px; letter-spacing:2px; animation:hp-pulse .5s steps(2) infinite; }
-.boss-sprite { font-size:60px; display:block; margin-bottom:10px; }
-#boss-nm { font-family:var(--font-silk); font-size:16px; color:var(--red2); margin-bottom:8px; display:block; }
-
-.dead-ov > div {
-  background:var(--panel); border:3px solid var(--red2); padding:32px;
-  max-width:360px; width:90%; text-align:center;
-}
-.dead-txt {
-  font-family:var(--font-px); font-size:16px; color:var(--red2); margin-bottom:10px;
-  text-shadow:0 0 18px var(--red); letter-spacing:4px;
-}
-
-.chest-box { background:var(--panel); border:3px solid var(--gold); padding:28px 32px; text-align:center; max-width:280px; width:85%; }
-.chest-ico { font-size:52px; display:block; margin-bottom:10px; }
-.chest-nm  { font-family:var(--font-silk); font-size:15px; color:var(--gold2); margin-bottom:6px; }
-
-.lu-ov { cursor:pointer; }
-.lu-box { background:var(--panel); border:3px solid var(--gold); padding:32px 40px; text-align:center; max-width:320px; width:88%; }
-@keyframes lu-glow { 0%,100%{text-shadow:0 0 14px var(--gold)} 50%{text-shadow:0 0 28px var(--gold2),0 0 50px rgba(234,184,48,.3)} }
-.lu-lv  { font-family:var(--font-px); font-size:20px; color:var(--gold2); margin-bottom:8px; animation:lu-glow 1.2s steps(4) infinite; }
-.lu-cls { font-family:var(--font-silk); font-size:14px; color:var(--torch2); margin-bottom:10px; }
-.lu-sub { font-family:var(--font-vt); font-size:15px; color:var(--text3); }
-
-/* ══════════════
-   BADGES
-══════════════ */
-.badge { font-family:var(--font-px); font-size:5px; padding:2px 5px; border:1px solid; display:inline-block; vertical-align:middle; }
-.bg { background:rgba(56,104,48,.2); border-color:var(--green); color:var(--green2); }
-.bb { background:rgba(32,72,152,.2); border-color:var(--blue);  color:var(--blue2);  }
-.by { background:rgba(200,152,32,.2); border-color:var(--gold); color:var(--gold2);  }
-.bp { background:rgba(107,40,152,.2); border-color:var(--purple); color:var(--purple2); }
-
-/* ══════════════
-   CLICKABLE WORDS
-══════════════ */
-.cw {
-  color: inherit;           /* 跟周圍文字同色，不突兀 */
-  cursor: pointer;
-  border-bottom: 1px dotted rgba(200,152,32,0.5);  /* 淡金色底線提示可點 */
-  transition: none;
-}
-.cw:hover {
-  color: var(--gold2);      /* hover 時才變金色 */
-  border-bottom-color: var(--gold2);
-}
-.tip-box { position:absolute; background:var(--panel); border:1px solid var(--torch); padding:5px 9px; font-family:var(--font-vt); font-size:15px; color:var(--text); white-space:nowrap; z-index:100; bottom:calc(100% + 6px); left:0; box-shadow:3px 3px 0 rgba(0,0,0,.7); }
-.tip-spk { background:none; border:none; cursor:pointer; padding:0 4px; font-size:13px; }
-
-/* ══════════════
-   DAMAGE FLOATS
-══════════════ */
-@keyframes float-up { 0%{opacity:1;transform:translateY(0) scale(1)} 50%{opacity:1;transform:translateY(-22px) scale(1.15)} 100%{opacity:0;transform:translateY(-44px) scale(.8)} }
-.dmg-float { pointer-events:none; font-family:var(--font-px); font-size:9px; font-weight:bold; text-shadow:2px 2px 0 rgba(0,0,0,.9); animation:float-up 1.3s ease-out forwards; z-index:50; white-space:nowrap; }
-
-/* ══════════════
-   PARTICLES
-══════════════ */
-@keyframes particle-burst { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)} }
-.particle { position:fixed; font-size:16px; pointer-events:none; z-index:1000; animation:particle-burst 2s ease-out forwards; }
-
-/* ══════════════
-   FORM ELEMENTS
-══════════════ */
-textarea, input[type="text"], input[type="number"], select {
-  background:var(--bg); border:1px solid var(--border2); color:var(--text);
-  font-family:var(--font-vt); font-size:16px; padding:8px 10px; width:100%; outline:none; resize:vertical;
-}
-textarea:focus, input:focus { border-color:var(--torch); }
-select { cursor:pointer; }
-select option { background:var(--panel); }
-
-/* ══════════════
-   RESULT SCREEN
-══════════════ */
-#dq-result .card { border:2px solid var(--gold); }
-#res-title { font-family:var(--font-px); font-size:14px; color:var(--gold2); margin-bottom:6px; text-shadow:0 0 14px var(--gold); letter-spacing:3px; }
-#res-score { font-family:var(--font-silk); font-size:18px; color:var(--text2); }
-#res-msg   { font-family:var(--font-vt); font-size:20px; color:var(--cyan2); }
-
-/* Start card highlight */
-#dq-start .card:first-child { border:2px solid var(--torch); background:var(--panel2); }
-#dq-start .card:first-child::before, #dq-start .card:first-child::after { border-color:var(--torch); }
-
-/* ══════════════
-   IMPORT/EXPORT
-══════════════ */
-.import-result { font-family:var(--font-vt); font-size:15px; margin-top:6px; padding:6px 10px; border:1px solid; }
-.import-result.ok { border-color:var(--green2); color:var(--green2); }
-.import-result.err{ border-color:var(--red2);   color:var(--red2);   }
-
-/* Pixel decorative divider */
-.px-div { height:2px; background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 4px,transparent 4px,transparent 8px); margin:10px 0; }
-
-/* ══════════════
-   RESPONSIVE
-══════════════ */
-@media(max-width:480px){
-  .title-px { font-size:7px; }
-  .inv-grid { grid-template-columns:repeat(4,1fr); }
-  .stats-grid { grid-template-columns:repeat(2,1fr); }
-  .main-tab { font-size:5px; padding:8px 4px; }
-}
-</style>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
 <!-- ════════════════ OVERLAYS ════════════════ -->
 
-<!-- Level Up -->
-<div class="lu-ov" id="lu-ov" onclick="closeLU()">
-  <div class="lu-box">
-    <span style="font-size:52px;display:block;margin-bottom:.6rem">⭐</span>
-    <div class="lu-lv" id="lu-lv">Lv.2</div>
-    <div class="lu-cls" id="lu-cls"></div>
-    <div class="lu-sub">— 點擊任意處繼續 —</div>
-  </div>
-</div>
-
 <!-- Boss Encounter -->
-<div class="boss-ov" id="boss-ov">
-  <div class="boss-box">
-    <div class="boss-title">⚠ BOSS ENCOUNTER ⚠</div>
-    <span class="boss-sprite" id="boss-spr">🐉</span>
-    <span id="boss-nm">魔王</span>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:1.4rem;font-family:var(--font-vt)" id="boss-desc">強大的魔王出現了！</div>
-    <button class="btn btn-red" onclick="beginBattle()">⚔️ 迎戰！</button>
-  </div>
-</div>
-
-<!-- Game Over -->
-<div class="dead-ov" id="dead-ov">
-  <div>
-    <div class="dead-txt">GAME OVER</div>
-    <div style="font-family:var(--font-vt);font-size:16px;color:var(--text2);margin-bottom:1.2rem">你的冒險在此終結…</div>
-    <div style="font-family:var(--font-vt);font-size:14px;color:var(--text3);margin-bottom:1.5rem" id="dead-floor"></div>
-    <div class="btn-row" style="justify-content:center;gap:8px">
-      <button class="btn btn-gold" onclick="revive()">🔮 復活水晶</button>
-      <button class="btn btn-red"  onclick="newGame()">💀 重新出發</button>
-    </div>
-  </div>
-</div>
-
-<!-- Chest Popup -->
-<div class="chest-ov" id="chest-ov">
-  <div class="chest-box">
-    <div style="font-family:var(--font-px);font-size:8px;color:var(--gold2);margin-bottom:.8rem;letter-spacing:2px">📦 ITEM FOUND</div>
-    <span class="chest-ico" id="chest-ico">⚗️</span>
-    <div class="chest-nm" id="chest-nm">神秘道具</div>
-    <div style="font-family:var(--font-vt);font-size:14px;color:var(--text2);margin-bottom:.8rem" id="chest-desc"></div>
-    <button class="btn btn-gold btn-sm" onclick="closeChest()">收進背包</button>
-  </div>
-</div>
-
-<!-- Export Modal -->
-<div class="modal-ov" id="export-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-hdr">
-      <div class="modal-ttl" id="export-ttl">匯出資料</div>
-      <button class="btn btn-gray btn-sm" onclick="closeModal()">關閉</button>
-    </div>
-    <textarea id="modal-txt" readonly onclick="this.select()" style="min-height:180px;font-family:monospace;font-size:12px;margin-bottom:10px"></textarea>
-    <div class="btn-row">
-      <button class="btn btn-gold btn-sm"  onclick="copyModal()">📋 複製</button>
-      <button class="btn btn-blue btn-sm"  onclick="downloadModal()">⬇ 下載 .json</button>
-    </div>
-  </div>
-</div>
-
-<!-- Inventory Modal -->
-<div class="modal-ov" id="inv-modal" onclick="if(event.target===this)closeInv()">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-ttl">🎒 背包與裝備</div>
-      <button class="btn btn-gray btn-sm" onclick="closeInv()">關閉</button>
-    </div>
-    <div class="inv-section-title" style="color:var(--purple2)">✨ 遺物欄</div>
-    <div class="relic-grid" id="relic-slots" style="margin-bottom:1rem"></div>
-    <div class="inv-section-title" style="color:var(--gold)">📦 道具欄（點擊使用 / 裝備）</div>
-    <div class="inv-grid" id="inv-grid" style="margin-bottom:1rem"></div>
-    <div class="inv-section-title" style="color:var(--cyan2)">🗡️ 角色屬性</div>
-    <div class="stats-grid">
-      <div class="stat-box"><span class="stat-ico">⚔️</span><div class="stat-info"><span class="stat-lbl">攻擊力</span><div class="stat-val" id="inv-atk" style="color:var(--orange2)">—</div></div></div>
-      <div class="stat-box"><span class="stat-ico">🛡️</span><div class="stat-info"><span class="stat-lbl">防禦力</span><div class="stat-val" id="inv-def" style="color:var(--cyan2)">—</div></div></div>
-      <div class="stat-box"><span class="stat-ico">❤️</span><div class="stat-info"><span class="stat-lbl">最大HP</span><div class="stat-val" id="inv-mhp" style="color:var(--red2)">—</div></div></div>
-      <div class="stat-box"><span class="stat-ico">💎</span><div class="stat-info"><span class="stat-lbl">最大MP</span><div class="stat-val" id="inv-mmp" style="color:var(--blue2)">—</div></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- Hidden legacy modal -->
-<div class="modal-ov" id="json-modal" style="display:none!important"></div>
-
-<!-- Item Tooltip -->
-<div id="item-tooltip" class="item-tip" style="display:none"></div>
+<div class="boss-ov" id="boss-ov"></div>
 
 <!-- ════════════════ MAIN APP ════════════════ -->
 <div class="app">
@@ -801,54 +34,15 @@ select option { background:var(--panel); }
   <!-- BATTLE CANVAS -->
   <div class="battle-wrap">
     <canvas id="battle-canvas"></canvas>
-    <div class="battle-ui">
-      <!-- Player HUD -->
-      <div class="player-hud">
-        <div class="hud-name" id="phud-name">冒險者</div>
-        <div class="hud-class" id="phud-class">見習語言師</div>
-        <div class="hud-hp-row">
-          <span>HP</span>
-          <div class="hp-bar-wrap"><div class="hp-bar-fill player" id="php-bar" style="width:100%"></div></div>
-          <span class="hp-val" id="php-val">100/100</span>
-        </div>
-        <div class="hud-hp-row">
-          <span>MP</span>
-          <div class="mp-bar-wrap"><div class="hp-bar-fill mp" id="pmp-bar" style="width:100%"></div></div>
-          <span class="hp-val" id="pmp-val" style="color:var(--blue2)">50/50</span>
-        </div>
-        <div style="display:flex;gap:5px;margin-top:2px;flex-wrap:wrap;align-items:center">
-          <span style="font-family:var(--font-px);font-size:6px;color:var(--text2)">Lv.<span id="plv" style="color:var(--gold2)">1</span></span>
-          <span style="font-size:9px;color:var(--text3)">⚔<span id="patk" style="color:var(--orange2)">10</span></span>
-          <span style="font-size:9px;color:var(--text3)">🛡<span id="pdef" style="color:var(--blue2)">5</span></span>
-          <span id="pcombo" style="font-family:var(--font-px);font-size:6px;color:var(--gold2)"></span>
-        </div>
-      </div>
-      <!-- Enemy HUD -->
-      <div class="enemy-hud">
-        <div class="hud-name" id="ehud-name" style="color:var(--red2)">??</div>
-        <div class="hud-class" id="ehud-class" style="color:var(--text3)">—</div>
-        <div class="hud-hp-row right">
-          <span class="hp-val" id="ehp-val" style="color:var(--red2)">—</span>
-          <div class="hp-bar-wrap"><div class="hp-bar-fill enemy" id="ehp-bar" style="width:100%"></div></div>
-          <span style="font-size:11px">💀</span>
-        </div>
-        <div style="display:flex;gap:5px;margin-top:2px;flex-wrap:wrap;justify-content:flex-end">
-          <span style="font-size:9px;color:var(--text3)">⚔<span id="eatk" style="color:var(--red2)">—</span></span>
-          <span style="font-size:9px;color:var(--text3)">🛡<span id="edef" style="color:var(--blue2)">—</span></span>
-        </div>
-      </div>
-    </div>
+    <div class="battle-ui"></div>
   </div>
 
   <!-- DUNGEON INFO BAR -->
   <div class="dungeon-info">
-    <span class="floor-chip" id="floor-chip">B1F</span>
-    <span id="boss-warn-txt" class="boss-warn" style="display:none">⚠ BOSS!</span>
+    <span class="floor-chip" id="floor-chip">WAVE 1</span>
+    <span id="wave-timer" style="font-family:var(--font-px); font-size:8px; color:var(--orange2); margin-left:5px">00:00</span>
     <div class="floor-track"><div class="floor-track-fill" id="floor-trk" style="width:0%"></div></div>
-    <span class="d-stat">⭐ <strong id="exp-disp" style="color:var(--gold2)">0</strong></span>
-    <span class="d-stat">🏰 <strong id="floor-disp">第1層</strong></span>
-    <span id="combo-disp" class="d-stat"></span>
-    <button class="btn btn-purple btn-sm" onclick="openInventory()">🎒 背包</button>
+    <span class="d-stat">💰 <strong id="exp-disp" style="color:var(--gold2)">0</strong></span>
   </div>
 
   <!-- MAIN TABS -->
@@ -856,8 +50,8 @@ select option { background:var(--panel); }
     <button class="main-tab active" onclick="mainTab('dungeon')">
       <span class="tab-ico">⚔️</span>地下城
     </button>
-    <button class="main-tab" onclick="mainTab('character')">
-      <span class="tab-ico">👤</span>角色
+    <button class="main-tab" onclick="mainTab('upgrade')">
+      <span class="tab-ico">💎</span>強化
     </button>
     <button class="main-tab" onclick="mainTab('data')">
       <span class="tab-ico">💾</span>資料
@@ -874,29 +68,15 @@ select option { background:var(--panel); }
       <div class="card" style="text-align:center;padding:1.75rem">
         <!-- Pixel dungeon entrance art -->
         <div style="font-family:var(--font-px);font-size:32px;margin-bottom:.5rem;color:var(--torch2);text-shadow:0 0 20px var(--torch)">🏰</div>
-        <div style="font-family:var(--font-px);font-size:9px;color:var(--gold2);margin-bottom:.3rem;letter-spacing:2px">詞源傳說 II</div>
-        <div style="font-family:var(--font-vt);font-size:18px;color:var(--text2);margin-bottom:1.2rem;line-height:1.7" id="dq-info">載入中…</div>
-
-        <div style="font-family:var(--font-silk);font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">— 難度選擇 —</div>
-        <div class="lvl-group" style="justify-content:center" id="dql">
-          <button class="lvl-btn on" onclick="dqlv(this,'beginner')">🟢 初級</button>
-          <button class="lvl-btn" onclick="dqlv(this,'intermediate')">🟡 中級</button>
-          <button class="lvl-btn" onclick="dqlv(this,'advanced')">🟠 高級</button>
-          <button class="lvl-btn" onclick="dqlv(this,'all')">⚪ 全部</button>
-        </div>
-
-        <div style="font-family:var(--font-silk);font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">— 題型模式 —</div>
-        <div class="lvl-group" style="justify-content:center" id="dqm">
-          <button class="lvl-btn on" onclick="dqmd(this,'mixed')">🌀 混合</button>
-          <button class="lvl-btn" onclick="dqmd(this,'email_fill')">📧 填空</button>
-          <button class="lvl-btn" onclick="dqmd(this,'job_define')">💡 定義</button>
-          <button class="lvl-btn" onclick="dqmd(this,'logic_grammar')">📝 文法</button>
-          <button class="lvl-btn" onclick="dqmd(this,'response_choice')">💬 對話</button>
-          <button class="lvl-btn" onclick="dqmd(this,'vocab')">⚔ 詞彙</button>
+        <div style="font-family:var(--font-px);font-size:9px;color:var(--gold2);margin-bottom:.3rem;letter-spacing:2px">詞源傳說 II：戰鬥模式</div>
+        <div style="font-family:var(--font-vt);font-size:18px;color:var(--text2);margin-bottom:1.2rem;line-height:1.7">
+          敵人的波次即將到來！<br>
+          答對英文題目賺取金幣，召喚士兵守護主堡。<br>
+          (題目將隨機從你的題庫中選取)
         </div>
 
         <div class="btn-row" style="justify-content:center">
-          <button class="btn btn-gold" onclick="startDungeon()">⚔️ 進入地下城</button>
+          <button class="btn btn-gold" onclick="dQlv='all';dQmd='mixed';startDungeon()">⚔️ 開始戰鬥</button>
         </div>
       </div>
 
@@ -910,28 +90,71 @@ select option { background:var(--panel); }
 
     <!-- Active Battle -->
     <div id="dq-active" style="display:none">
-      <div class="prog-wrap"><div class="prog-fill" id="dqpf" style="width:0%"></div></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="color:var(--text2);font-family:var(--font-px);font-size:8px" id="dqpl">Q1</span>
-        <span style="font-family:var(--font-silk);font-size:12px">
-          ✓<span id="dqc" style="color:var(--green2);font-weight:700">0</span>
-          ✗<span id="dqw" style="color:var(--red2);font-weight:700">0</span>
-        </span>
-        <button class="btn btn-red btn-sm" onclick="exitDungeon()">🏃 逃跑</button>
+      <!-- Question Progress -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:0 4px">
+        <span id="dqpl" style="font-family:var(--font-px); font-size:8px; color:var(--gold2)">Q1</span>
+        <div style="flex:1; margin:0 10px; height:6px; background:var(--bg); border:1px solid var(--border); overflow:hidden">
+          <div id="dqpf" style="width:0%; height:100%; background:var(--gold)"></div>
+        </div>
+        <div style="font-family:var(--font-px); font-size:6px; color:var(--text2)">
+          ✅<span id="dqc">0</span> ❌<span id="dqw">0</span>
+        </div>
+      </div>
+
+      <!-- Summon Interface -->
+      <div class="card" style="margin-bottom:8px; padding:8px">
+        <div class="q-head" style="margin-bottom:5px">🛡️ 召喚士兵</div>
+        <div class="btn-row" style="justify-content:space-around; gap: 4px;">
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士: 地屬性，基礎近戰">
+            🗡️ 戰士 ($100)<br><small style="font-size:8px;">🌿</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-skeleton" onclick="summonSoldier('skeleton')" title="骨骸戰士: 地屬性，高攻擊力">
+            💀 骨骸 ($150)<br><small style="font-size:8px;">🌿</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士: 地屬性，高生命值">
+            🛡️ 聖騎 ($400)<br><small style="font-size:8px;">🌿</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-hero" onclick="summonSoldier('hero')" title="英雄: 地屬性，全能強者">
+            ✨ 英雄 ($800)<br><small style="font-size:8px;">🌿</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手: 水屬性，遠程射手">
+            🏹 弓手 ($100)<br><small style="font-size:8px;">💧</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客: 水屬性，極高速度與爆發">
+            🔪 刺客 ($250)<br><small style="font-size:8px;">💧</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客: 水屬性，快速穿透">
+            👻 幽靈 ($400)<br><small style="font-size:8px;">💧</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="牧師: 水屬性，輔助型">
+            ⚕️ 牧師 ($500)<br><small style="font-size:8px;">💧</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師: 火屬性，遠程魔法傷害">
+            🧙 魔法 ($100)<br><small style="font-size:8px;">🔥</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神: 火屬性，範圍高傷">
+            Grim 死神 ($350)<br><small style="font-size:8px;">🔥</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-knight" onclick="summonSoldier('knight')" title="騎士: 火屬性，高防禦坦克">
+            🐎 騎士 ($500)<br><small style="font-size:8px;">🔥</small>
+          </button>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主: 火屬性，終極強者">
+            🐉 龍領 ($1000)<br><small style="font-size:8px;">🔥</small>
+          </button>
+        </div>
+        <div style="font-size:9px; color:var(--text3); text-align:center; margin-top:5px">
+          剋制：💧 > 🔥, 🔥 > 🌿, 🌿 > 💧 (傷害 200% / 50%)
+        </div>
       </div>
 
       <div class="q-card" id="dqcard"></div>
       <div id="dqfb" style="display:none"></div>
 
-      <!-- Skills -->
-      <div id="skill-zone" style="margin-top:5px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-blue btn-sm"   onclick="useMagic('shield')" title="消耗 20 MP">🛡️ 護盾 (20)</button>
-        <button class="btn btn-purple btn-sm" onclick="useMagic('burst')"  title="消耗 30 MP">💥 爆裂 (30)</button>
-        <button class="btn btn-red btn-sm"    onclick="useMagic('heal')"   title="消耗 40 MP">💖 治癒 (40)</button>
-      </div>
-
-      <div style="text-align:right;margin-top:5px">
-        <button class="btn btn-gold" id="dqnxt" onclick="nextDQ()" style="display:none">繼續 →</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div id="dqnxt" style="display:none">
+          <button class="btn btn-gold btn-sm" onclick="renderDQ()">繼續下一題 →</button>
+        </div>
+        <button class="btn btn-red btn-sm" style="margin-left: auto;" onclick="if(confirm('確定要結束遊戲並結算獎勵嗎？')) endGame()">🏃 結束遊戲</button>
       </div>
     </div>
 
@@ -942,52 +165,28 @@ select option { background:var(--panel); }
         <div id="res-title">VICTORY!</div>
         <div id="res-score" style="margin-bottom:.5rem">0/0 答對</div>
         <div id="res-msg" style="margin-bottom:1.5rem">已前進至第 1 層</div>
-        <div class="btn-row" style="justify-content:center;gap:8px">
-          <button class="btn btn-gold" onclick="continueDungeon()">繼續探索</button>
-          <button class="btn btn-blue" onclick="mainTab('character')">查看角色</button>
+        <div class="btn-row" style="justify-content:center;gap:8px" id="res-btns">
+          <button class="btn btn-gray" onclick="exitDungeon()">返回主選單</button>
         </div>
       </div>
     </div>
 
   </div><!-- /mod-dungeon -->
 
-  <!-- ════════ CHARACTER TAB ════════ -->
-  <div id="mod-character" class="section">
-
+  <!-- ════════ UPGRADE TAB ════════ -->
+  <div id="mod-upgrade" class="section">
     <div class="card">
-      <div class="card-title" style="color:var(--gold2)">👤 角色狀態</div>
-      <div class="stats-grid">
-        <div class="stat-box"><span class="stat-ico">⭐</span><div class="stat-info"><span class="stat-lbl">等級</span><div class="stat-val" id="char-lv">1</div></div></div>
-        <div class="stat-box"><span class="stat-ico">💫</span><div class="stat-info"><span class="stat-lbl">EXP</span><div class="stat-val" id="char-exp">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">❤️</span><div class="stat-info"><span class="stat-lbl">最大 HP</span><div class="stat-val" id="char-maxhp" style="color:var(--red2)">100</div></div></div>
-        <div class="stat-box"><span class="stat-ico">💎</span><div class="stat-info"><span class="stat-lbl">最大 MP</span><div class="stat-val" id="char-maxmp" style="color:var(--blue2)">50</div></div></div>
-        <div class="stat-box"><span class="stat-ico">⚔️</span><div class="stat-info"><span class="stat-lbl">攻擊力</span><div class="stat-val" id="char-atk" style="color:var(--orange2)">10</div></div></div>
-        <div class="stat-box"><span class="stat-ico">🛡️</span><div class="stat-info"><span class="stat-lbl">防禦力</span><div class="stat-val" id="char-def" style="color:var(--cyan2)">5</div></div></div>
-        <div class="stat-box"><span class="stat-ico">🏰</span><div class="stat-info"><span class="stat-lbl">樓層</span><div class="stat-val" id="char-floor" style="color:var(--text)">1</div></div></div>
-        <div class="stat-box"><span class="stat-ico">💍</span><div class="stat-info"><span class="stat-lbl">鑽石</span><div class="stat-val" id="char-diamond" style="color:var(--purple2)">0</div></div></div>
+      <div class="card-title" style="color:var(--gold2)">💎 士兵強化商店</div>
+      <div style="text-align:center; margin-bottom:15px">
+        <span style="font-size:20px">💎 <strong id="upgrade-gems">0</strong></span>
+        <div style="font-size:12px; color:var(--text3)">可用寶石點數</div>
+      </div>
+      
+      <div id="upgrade-list" class="upgrade-grid">
+        <!-- 強化項目與士兵屬性預覽將整合在此處渲染 -->
       </div>
     </div>
-
-    <div class="card">
-      <div class="card-title" style="color:var(--cyan2)">📊 探索統計</div>
-      <div class="stats-grid">
-        <div class="stat-box"><span class="stat-ico">⚔️</span><div class="stat-info"><span class="stat-lbl">詞彙擊殺</span><div class="stat-val" id="char-vocab-kills">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">📝</span><div class="stat-info"><span class="stat-lbl">文法擊殺</span><div class="stat-val" id="char-grammar-kills">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">🏆</span><div class="stat-info"><span class="stat-lbl">Boss 擊殺</span><div class="stat-val" id="char-boss-kills" style="color:var(--red2)">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">🔥</span><div class="stat-info"><span class="stat-lbl">最高連擊</span><div class="stat-val" id="char-max-combo" style="color:var(--orange2)">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">📍</span><div class="stat-info"><span class="stat-lbl">最高樓層</span><div class="stat-val" id="char-max-floor">1</div></div></div>
-        <div class="stat-box"><span class="stat-ico">✨</span><div class="stat-info"><span class="stat-lbl">遺物數量</span><div class="stat-val" id="char-relics" style="color:var(--purple2)">0</div></div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title" style="color:var(--purple2)">✨ 遺物列表</div>
-      <div class="relic-grid" id="char-relic-grid">
-        <div style="font-family:var(--font-vt);font-size:16px;color:var(--text3);grid-column:1/-1;text-align:center;padding:16px">尚未獲得任何遺物</div>
-      </div>
-    </div>
-
-  </div><!-- /mod-character -->
+  </div>
 
   <!-- ════════ DATA TAB ════════ -->
   <div id="mod-data" class="section">
@@ -1006,10 +205,9 @@ select option { background:var(--panel); }
       <div class="stats-grid">
         <div class="stat-box"><span class="stat-ico">🏰</span><div class="stat-info"><span class="stat-lbl">最深樓層</span><div class="stat-val" id="stat-total-floors">0</div></div></div>
         <div class="stat-box"><span class="stat-ico">⚔️</span><div class="stat-info"><span class="stat-lbl">總擊殺數</span><div class="stat-val" id="stat-total-kills">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">🏆</span><div class="stat-info"><span class="stat-lbl">Boss 數</span><div class="stat-val" id="stat-total-bosses" style="color:var(--red2)">0</div></div></div>
         <div class="stat-box"><span class="stat-ico">📚</span><div class="stat-info"><span class="stat-lbl">詞彙庫</span><div class="stat-val" id="h-vocab" style="color:var(--green2)">0</div></div></div>
         <div class="stat-box"><span class="stat-ico">📝</span><div class="stat-info"><span class="stat-lbl">文法題庫</span><div class="stat-val" id="h-grammar" style="color:var(--blue2)">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">✨</span><div class="stat-info"><span class="stat-lbl">遺物收藏</span><div class="stat-val" id="h-relics" style="color:var(--purple2)">0</div></div></div>
+        <div class="stat-box"><span class="stat-ico">💎</span><div class="stat-info"><span class="stat-lbl">持有寶石</span><div class="stat-val" id="stat-gems" style="color:var(--cyan2)">0</div></div></div>
       </div>
     </div>
 
@@ -1036,30 +234,7 @@ select option { background:var(--panel); }
 <script src="js/scripts.js"></script>
 
 <script>
-// ── continueDungeon ──
-function continueDungeon() {
-  const fl = player.floor || 1;
-  const isBoss = fl % 10 === 0;
-  buildPools();
-  if (isBoss) {
-    currentEnemy = spawnEnemy(fl, true);
-    dIsBoss = true;
-    updateEnemyHud();
-    document.getElementById('boss-spr').textContent = currentEnemy.sprite;
-    document.getElementById('boss-nm').textContent  = currentEnemy.name;
-    document.getElementById('boss-desc').textContent = currentEnemy.desc || '強大的魔王出現了！';
-    document.getElementById('boss-ov').classList.add('show');
-    sfxBoss();
-  } else {
-    currentEnemy = spawnEnemy(fl, false);
-    dIsBoss = false;
-    updateEnemyHud();
-    dqshow('dq-active');
-    dLog('⚔️ 第 ' + fl + ' 層 — 遭遇 ' + currentEnemy.name + '（HP:' + currentEnemy.hp + '）', 'log-warn');
-    renderDQ();
-  }
-  updateDungeonBar();
-}
+
 
 // ── Patch renderVocabQ：句子與選項都套 mkCW()，讓英文單字可點擊播音 ──
 // 用 DOMContentLoaded + setTimeout 確保所有 JS 都載入完畢後再覆寫
@@ -1092,8 +267,8 @@ window.addEventListener('load', function() {
       // 選項按鈕：單字也過 mkCW
       function makeOpt(o) {
         var isCorrect = o.id === q.id ? '1' : '0';
-        var safeWord = o.word.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        var safeCorr = q.word.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        var safeWord = o.word.replace(/\\/g, '\\\\').replace(/'/g, "\'");
+        var safeCorr = q.word.replace(/\\/g, '\\\\').replace(/'/g, "\'");
         return '<button class="opt-btn"'
              + ' data-word="' + esc(o.word) + '"'
              + ' data-correct="' + isCorrect + '"'
@@ -1119,35 +294,6 @@ window.addEventListener('load', function() {
   }, 300);
 });
 
-// ── Patch updateCharacterInfo：同步遺物欄位 ──
-window.addEventListener('load', function() {
-  setTimeout(function patchCharInfo() {
-    if (typeof updateCharacterInfo !== 'function') { setTimeout(patchCharInfo, 200); return; }
-    var _old = updateCharacterInfo;
-    window.updateCharacterInfo = function() {
-      _old();
-      var rg = document.getElementById('char-relic-grid');
-      if (rg && typeof RELICS !== 'undefined' && typeof player !== 'undefined') {
-        var relics = (player.relics || []).map(function(id){ return RELICS.find(function(r){ return r.id === id; }); }).filter(Boolean);
-        if (!relics.length) {
-          rg.innerHTML = '<div style="font-family:var(--font-vt);font-size:16px;color:var(--text3);grid-column:1/-1;text-align:center;padding:16px">尚未獲得任何遺物</div>';
-        } else {
-          rg.innerHTML = relics.map(function(r) {
-            return '<div class="relic-slot active" title="' + r.desc + '">'
-                 + '<div class="r-ico">' + r.icon + '</div>'
-                 + '<div class="r-nm">' + r.name + '</div>'
-                 + '<div class="r-desc">' + r.desc + '</div>'
-                 + '</div>';
-          }).join('');
-        }
-      }
-      var mco = document.getElementById('char-max-combo');
-      if (mco) mco.textContent = player.maxCombo || 0;
-      var mfl = document.getElementById('char-max-floor');
-      if (mfl) mfl.textContent = player.totalFloors || player.floor || 1;
-    };
-  }, 300);
-});
 </script>
 
 </body>

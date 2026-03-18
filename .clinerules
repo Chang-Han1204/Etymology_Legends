@@ -1,0 +1,6 @@
+# Efficiency & Token Saving Rules:
+1. **No Redundant Search**: 如果搜尋失敗 (No match)，嚴禁使用相同的 Pattern 重試。請改用 `ls` 確認目錄結構或要求我提供精確路徑。
+2. **Minimal File Reading**: 除非必要，否則不要讀取超過 500 行的完整檔案。優先要求我提供特定代碼段落或使用 `grep` 縮小範圍。
+3. **Concise Response**: 回答請保持簡潔，除非我要求詳細解釋，否則直接執行任務並簡述變更即可。
+4. **Context Awareness**: 在處理大型 JSON 或 CSV 等資料庫檔案時，先讀取前 10 行確認結構，不要一次讀取全圖，避免浪費流量。
+5. **Batch Actions**: 盡可能在一次 Tool Use 中完成多個細微修改，減少對話來回次數。
