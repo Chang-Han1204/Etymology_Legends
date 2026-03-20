@@ -105,9 +105,9 @@ function spawnWaveEnemy() {
 // ══════════════════════════════════════════════
 // DUNGEON QUIZ
 // ══════════════════════════════════════════════
-let dQlv = 'all', dQmd = 'vocab', dAnswered = false, dIsBoss = false, dIsGrammar = false;
-// Infinite queue — two pools that get shuffled and cycled
-let vPool = [], gPool = [], vIdx = 0, gIdx = 0;
+let dQlv = 'all', dQmd = 'mixed', dAnswered = false, dIsBoss = false, dIsGrammar = true;
+// Infinite queue — pools that get shuffled and cycled
+let gPool = [], gIdx = 0;
 let dQC = 0, dQW = 0, dQTot = 0;
 
 function dqlv(btn, l) {
@@ -125,22 +125,10 @@ function dqmd(btn, m) {
 }
 
 function dqStartInfo() {
-  const fl = player.floor || 1;
-  const isBoss = fl % 10 === 0;
-  
-  let vocabCount = 0;
   let grammarCount = 0;
-  let totalCount = 0;
-
-  const filteredVocab = dQlv === 'all'
-    ? vWords.filter(w => w.sentence && w.sentence.includes('___'))
-    : vWords.filter(w => w.level === dQlv && w.sentence && w.sentence.includes('___'));
-  vocabCount = filteredVocab.length;
 
   let filteredGrammar = [];
-  if (dQmd === 'vocab') {
-    // do nothing, only vocab
-  } else if (dQmd === 'mixed') {
+  if (dQmd === 'mixed') {
     filteredGrammar = dQlv === 'all'
       ? [...gQuestions]
       : gQuestions.filter(g => g.level === dQlv);
@@ -151,32 +139,18 @@ function dqStartInfo() {
       : gQuestions.filter(g => g.level === dQlv && g.type === dQmd);
   }
   grammarCount = filteredGrammar.length;
-
-  if (dQmd === 'vocab') {
-    totalCount = vocabCount;
-  } else if (dQmd === 'mixed') {
-    totalCount = vocabCount + grammarCount;
-  } else { // specific grammar type
-    totalCount = grammarCount;
-  }
   
   // 檢查是否存在「進入地下城」按鈕並禁用它
   const startBtn = document.querySelector('button[onclick*="startDungeon"]');
   if (startBtn) {
-    startBtn.disabled = totalCount < 2;
+    startBtn.disabled = grammarCount < 2;
   }
 }
 
 function buildPools() {
-  // 詞彙題庫篩選
-  vPool = shuffle(dQlv === 'all' 
-    ? vWords.filter(w => w.sentence && w.sentence.includes('___')) 
-    : vWords.filter(w => w.level === dQlv && w.sentence && w.sentence.includes('___')));
-  vIdx = 0;
-
   // 文法題庫篩選，根據 dQmd 決定題型
   let filteredGrammarQuestions = [];
-  if (dQmd === 'mixed' || dQmd === 'vocab') { // Mixed mode or just vocab won't filter grammar by type yet
+  if (dQmd === 'mixed') {
     filteredGrammarQuestions = dQlv === 'all' 
       ? [...gQuestions] 
       : gQuestions.filter(g => g.level === dQlv);
@@ -187,17 +161,6 @@ function buildPools() {
   }
   gPool = shuffle(filteredGrammarQuestions);
   gIdx = 0;
-}
-
-function nextVocabQ() {
-  if (!vPool.length) return null;
-  const q = vPool[vIdx % vPool.length];
-  vIdx++;
-  if (vIdx >= vPool.length) {
-    vPool = shuffle(vPool);
-    vIdx = 0;
-  }
-  return q;
 }
 
 function nextGrammarQ() {
@@ -212,26 +175,6 @@ function nextGrammarQ() {
 }
 
 function nextQItem() {
-  if (dQmd === 'vocab') return { type: 'vocab', data: nextVocabQ() };
-  
-  // If a specific grammar type is selected, only draw from gPool
-  if (dQmd === 'email_fill' || dQmd === 'job_define' || dQmd === 'logic_grammar' || dQmd === 'response_choice') {
-    return { type: 'grammar', data: nextGrammarQ() };
-  }
-
-  // Mixed mode: alternate or random between vocab and all grammar types in gPool
-  if (dQmd === 'mixed') {
-    const hasVocab = vPool.length > 0;
-    const hasGrammar = gPool.length > 0;
-
-    if (hasVocab && (!hasGrammar || Math.random() < 0.5)) {
-      return { type: 'vocab', data: nextVocabQ() };
-    } else if (hasGrammar) {
-      return { type: 'grammar', data: nextGrammarQ() };
-    }
-  }
-  
-  // Fallback if nothing else matches (e.g., if gQmd was 'grammar' but no specific type was chosen)
   return { type: 'grammar', data: nextGrammarQ() };
 }
 
@@ -239,14 +182,14 @@ function startDungeon() {
   buildPools();
   
   // 如果題庫還沒載入，嘗試等待一下再開始
-  if (vWords.length === 0 && gQuestions.length === 0) {
+  if (gQuestions.length === 0) {
     dLog('⏳ 正在載入題庫，請稍候...', 'log-info');
     setTimeout(startDungeon, 500);
     return;
   }
 
-  if (vPool.length + gPool.length < 2) {
-    alert('題目不足（至少需要 2 題），請先新增單字或文法題！');
+  if (gPool.length < 2) {
+    alert('題目不足（至少需要 2 題），請先新增題目！');
     return;
   }
   
@@ -405,43 +348,12 @@ function renderDQ() {
     document.getElementById('dqcard').innerHTML = `<div class="card" style="text-align:center;color:var(--red2)">題庫載入失敗或內容不足，請返回主選單確認。</div>`;
     return;
   }
-  dIsGrammar = qItem.type === 'grammar';
-  if (dIsGrammar) renderGrammarQ(qItem.data);
-  else renderVocabQ(qItem.data);
-}
-
-function renderVocabQ(q) {
-  const others = shuffle(vWords.filter(w => w.id !== q.id && w.word !== q.word)).slice(0, 3);
-  const opts = shuffle([q, ...others]);
-  const safe = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const lvBadge = {
-    advanced: `<span class="badge by" style="font-size:9px">進階</span>`,
-    intermediate: `<span class="badge bb" style="font-size:9px">中級</span>`,
-    beginner: `<span class="badge bg" style="font-size:9px">初級</span>`
-  };
-  // Build blank sentence safely
-  const parts = q.sentence.split('___');
-  const sentHtml = parts.map((p, i) => esc(p) + (i < parts.length - 1 ? `<span class="q-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>` : '')).join('');
-  let html = `<div class="q-head">⚔ 詞彙解密 ${lvBadge[q.level] || ''}</div>
-  <div class="q-text">${sentHtml}</div>`;
-  if (hasRelic('relic_compass')) {
-    let done = false;
-    opts.forEach(o => {
-      if (o.id !== q.id && !done) {
-        done = true;
-        return;
-      }
-      html += `<button class="opt-btn" data-word="${esc(o.word)}" data-correct="${o.id === q.id ? '1' : '0'}" onclick="selDQ(this,'vocab','${safe(o.word)}','${safe(q.word)}',event)">${esc(o.word)}${o.pos ? ` <span style="color:var(--text2);font-size:12px">[${esc(o.pos)}]</span>` : ''}</button>`;
-    });
-  } else {
-    html += opts.map(o => `<button class="opt-btn" data-word="${esc(o.word)}" data-correct="${o.id === q.id ? '1' : '0'}" onclick="selDQ(this,'vocab','${safe(o.word)}','${safe(q.word)}',event)">${esc(o.word)}${o.pos ? ` <span style="color:var(--text2);font-size:12px">[${esc(o.pos)}]</span>` : ''}</button>`).join('');
-  }
-  document.getElementById('dqcard').innerHTML = html;
+  renderGrammarQ(qItem.data);
 }
 
 function renderGrammarQ(q) {
   const labels = ['A', 'B', 'C', 'D'];
-  let title = "🛡 語法重組";
+  let title = "🛡 結構邏輯診斷";
   let contentHtml = "";
 
   // 根據多益題型調整顯示
@@ -469,10 +381,19 @@ function renderGrammarQ(q) {
       break;
   }
 
+  // 打亂選項邏輯
+  const originalOptions = q.options.map((text, index) => ({ text, isCorrect: index === q.answer }));
+  const shuffledOptions = shuffle([...originalOptions]);
+  const newAnswerIdx = shuffledOptions.findIndex(o => o.isCorrect);
+
   let html = `<div class="q-head">${title} ${q.tag ? `<span class="badge bp" style="font-size:9px">${esc(q.tag)}</span>` : ''}</div>
   ${contentHtml}`;
   
-  html += q.options.map((o, i) => `<button class="opt-btn" data-idx="${i}" onclick="selDQ(this,'grammar',${i},${q.answer},event)"><strong style="color:var(--cyan)">${labels[i]}.</strong> ${mkCW(o)}</button>`).join('');
+  // 使用新的打亂順序渲染，並傳入正確的索引
+  html += shuffledOptions.map((o, i) => 
+    `<button class="opt-btn" data-idx="${i}" onclick="selDQ(this,'grammar',${i},${newAnswerIdx},event)"><strong style="color:var(--cyan)">${labels[i]}.</strong> ${mkCW(o.text)}</button>`
+  ).join('');
+  
   document.getElementById('dqcard').innerHTML = html;
 }
 
@@ -482,44 +403,35 @@ function selDQ(btn, type, sel, cor, evt) {
   dQTot++; // 增加總題數
   
   const ok = String(sel) === String(cor);
-  const q = type === 'vocab' ? vPool[(vIdx - 1 + vPool.length) % vPool.length] : gPool[(gIdx - 1 + gPool.length) % gPool.length];
+  const q = gPool[(gIdx - 1 + gPool.length) % gPool.length];
 
   if (ok) {
     dQC++;
     Dungeon.correctCount = (Dungeon.correctCount || 0) + 1;
-    console.log("[Dungeon] Correct! Current count:", Dungeon.correctCount);
-    const reward = 50 + (player.lv * 5); // 提高獎勵
+    const reward = 50 + (player.lv * 5);
     Dungeon.gold += reward;
     sfxCorrect();
     spawnFloat(`+$${reward}`, cvW * 0.5, cvH * 0.5, 'var(--gold)');
     updateBattleUI();
     
-    if (type === 'vocab') vStats.correct = (vStats.correct || 0) + 1;
-    else gStats.correct = (gStats.correct || 0) + 1;
+    gStats.correct = (gStats.correct || 0) + 1;
   } else {
     dQW++;
-    // 答錯懲罰：主堡生命減少
     const penalty = 20 + (player.lv * 5);
     Dungeon.castleHp -= penalty;
-    sfxWrong(); // 播放錯誤音效
-    spawnFloat(`-${penalty}HP`, 30, cvH * 0.5, 'var(--red)'); // 在主堡位置顯示扣血
-    updateBattleUI(); // 更新 UI 顯示
+    sfxWrong();
+    spawnFloat(`-${penalty}HP`, 30, cvH * 0.5, 'var(--red)');
+    updateBattleUI();
     
-    if (type === 'vocab') vStats.wrong = (vStats.wrong || 0) + 1;
-    else gStats.wrong = (gStats.wrong || 0) + 1;
+    gStats.wrong = (gStats.wrong || 0) + 1;
   }
 
   // Highlight options
   document.querySelectorAll('#dq-active .opt-btn').forEach(b => {
     b.disabled = true;
-    if (type === 'vocab') {
-      if (b.dataset.correct === '1') b.classList.add('correct');
-      else if (b.dataset.word === String(sel) && !ok) b.classList.add('wrong');
-    } else {
-      const idx = parseInt(b.dataset.idx);
-      if (idx === parseInt(cor)) b.classList.add('correct');
-      else if (idx === parseInt(sel) && !ok) b.classList.add('wrong');
-    }
+    const idx = parseInt(b.dataset.idx);
+    if (idx === parseInt(cor)) b.classList.add('correct');
+    else if (idx === parseInt(sel) && !ok) b.classList.add('wrong');
   });
 
   // Feedback
@@ -527,21 +439,28 @@ function selDQ(btn, type, sel, cor, evt) {
   fb.style.display = 'block';
   fb.className = 'fb ' + (ok ? 'ok' : 'no');
   
-  let explain = '';
-  if (type === 'vocab') {
-    explain = q?.zh || q?.def || '無詳細解釋。';
-  } else { // grammar
-    explain = q?.explain || '無詳細解釋。';
-  }
-  
-  if (type === 'vocab') {
-    const cWord = q?.word || '';
-    fb.innerHTML = (ok ? `✅ 答對！+$${50 + player.lv*5}` : `❌ 答錯！正確答案是：<strong>${cWord}</strong>`) +
-                   `<div class="fb-explain">${explain}</div>`;
-    if (q?.sentence) speak(q.sentence.replace(/___/g, cWord));
-  } else {
-    fb.innerHTML = (ok ? `✅ 答對！+$${50 + player.lv*5}` : `❌ 答錯！正確答案是：<strong>${['A','B','C','D'][cor]}</strong>`) +
-                   `<div class="fb-explain">${explain}</div>`;
+  let explain = q?.explain || '無詳細解釋。';
+  fb.innerHTML = (ok ? `✅ 答對！+$${50 + player.lv*5}` : `❌ 答錯！正確答案是：<strong>${['A','B','C','D'][cor]}</strong>`) +
+                 `<div class="fb-explain">${explain}</div>`;
+
+  // 語音朗讀邏輯
+  if (ok && q) {
+    let sentenceToSpeak = '';
+    if (q.type === 'email_fill' && q.fullSentence) {
+      sentenceToSpeak = q.fullSentence;
+    } else if (q.question) {
+      // 對於其他題型，如果 question 包含 '___' 且有正確選項，嘗試替換
+      if (q.question.includes('___') && q.options && q.answer !== undefined) {
+        sentenceToSpeak = q.question.replace('___', q.options[q.answer]);
+      } else {
+        sentenceToSpeak = q.question;
+      }
+      // 過濾掉對話中的特殊字元，例如 '|'
+      sentenceToSpeak = sentenceToSpeak.replace(/\|/g, ' ');
+    }
+    if (sentenceToSpeak) {
+      speak(sentenceToSpeak);
+    }
   }
 
   // 顯示「繼續下一題」按鈕

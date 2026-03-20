@@ -231,20 +231,9 @@ function newGame() {
 
 // 新增一個「徹底重置」的功能供玩家在資料面板使用
 function hardReset() {
-  if (!confirm('這將清除所有等級、裝備與進度，確定嗎？')) return;
-  player = defPlayer();
-  saveAll();
+  if (!confirm("這將清除所有等級、裝備與進度，確定嗎？")) return;
+  resetData(); // Call the global resetData from storage.js
   location.reload();
-}
-
-// 兼容性函數（為了不破壞現有代碼）
-function saveAll() {
-  // 由於是檔案系統，這裡只是為了相容性保留
-  // 實際的儲存發生在匯入匯出時
-  // 為了避免每次更新都下載檔案，這裡只做 localStorage 保存
-  if (typeof saveLS === 'function') {
-    saveLS('vdp_rpg', player);
-  }
 }
 
 // ══════════════════════════════════════════════
@@ -297,29 +286,57 @@ function updateStatusPanel() {
   const mhp = getMaxHp(), mmp = getMaxMp();
   player.maxHp = mhp;
   player.maxMp = mmp;
+  
   const hpPct = clamp((player.hp || 0) / mhp * 100, 0, 100);
   const mpPct = clamp((player.mp || 0) / mmp * 100, 0, 100);
+  
   const hpBar = document.getElementById('php-bar');
-  hpBar.style.width = hpPct + '%';
-  if (hpPct < 30) hpBar.classList.add('low');
-  else hpBar.classList.remove('low');
-  document.getElementById('php-val').textContent = (player.hp || 0) + '/' + mhp;
-  document.getElementById('pmp-bar').style.width = mpPct + '%';
-  document.getElementById('pmp-val').textContent = (player.mp || 0) + '/' + mmp;
+  if (hpBar) {
+    hpBar.style.width = hpPct + '%';
+    if (hpPct < 30) hpBar.classList.add('low');
+    else hpBar.classList.remove('low');
+  }
+  
+  const hpVal = document.getElementById('php-val');
+  if (hpVal) hpVal.textContent = (player.hp || 0) + '/' + mhp;
+  
+  const mpBar = document.getElementById('pmp-bar');
+  if (mpBar) mpBar.style.width = mpPct + '%';
+  
+  const mpVal = document.getElementById('pmp-val');
+  if (mpVal) mpVal.textContent = (player.mp || 0) + '/' + mmp;
+
   const cls = getPlayerClass();
-  document.getElementById('phud-name').textContent = '冒險者';
-  document.getElementById('phud-class').textContent = cls.name;
-  document.getElementById('plv').textContent = player.lv || 1;
-  document.getElementById('patk').textContent = getAtk();
-  document.getElementById('pdef').textContent = getDef();
+  const phudName = document.getElementById('phud-name');
+  if (phudName) phudName.textContent = '冒險者';
+  
+  const phudClass = document.getElementById('phud-class');
+  if (phudClass) phudClass.textContent = cls.name;
+  
+  const plv = document.getElementById('plv');
+  if (plv) plv.textContent = player.lv || 1;
+  
+  const patk = document.getElementById('patk');
+  if (patk) patk.textContent = getAtk();
+  
+  const pdef = document.getElementById('pdef');
+  if (pdef) pdef.textContent = getDef();
+
   const combo = player.combo || 0;
   const pc = document.getElementById('pcombo');
-  if (combo >= 3) pc.textContent = '🔥' + combo + '連';
-  else pc.textContent = '';
-  document.getElementById('exp-disp').textContent = player.exp || 0;
+  if (pc) {
+    if (combo >= 3) pc.textContent = '🔥' + combo + '連';
+    else pc.textContent = '';
+  }
+
+  const expDisp = document.getElementById('exp-disp');
+  if (expDisp) expDisp.textContent = player.exp || 0;
+
   const cd = document.getElementById('combo-disp');
-  if (combo >= 3) cd.innerHTML = `<span style="color:var(--gold);font-weight:700">🔥${combo}連勝</span>`;
-  else cd.innerHTML = '';
+  if (cd) {
+    if (combo >= 3) cd.innerHTML = `<span style="color:var(--gold);font-weight:700">🔥${combo}連勝</span>`;
+    else cd.innerHTML = '';
+  }
   // MP skill button
   const mpBtn = document.getElementById('mp-skill-btn');
   if (mpBtn) mpBtn.style.display = (player.mp || 0) >= 20 ? 'inline-flex' : 'none';
@@ -449,32 +466,48 @@ function updateEquippedDisplay() {
 }
 
 function updateEnemyHud() {
+  const ehudName = document.getElementById("ehud-name");
+  const ehudClass = document.getElementById("ehud-class");
+  const ehpBar = document.getElementById("ehp-bar");
+  const ehpVal = document.getElementById("ehp-val");
+  const eatk = document.getElementById("eatk");
+  const edef = document.getElementById("edef");
+
   if (!currentEnemy) {
-    document.getElementById('ehud-name').textContent = '??';
-    document.getElementById('ehud-class').textContent = '—';
-    document.getElementById('ehp-bar').style.width = '100%';
-    document.getElementById('ehp-val').textContent = '—';
-    document.getElementById('eatk').textContent = '—';
-    document.getElementById('edef').textContent = '—';
+    if (ehudName) ehudName.textContent = "??";
+    if (ehudClass) ehudClass.textContent = "—";
+    if (ehpBar) ehpBar.style.width = "100%";
+    if (ehpVal) ehpVal.textContent = "—";
+    if (eatk) eatk.textContent = "—";
+    if (edef) edef.textContent = "—";
     return;
   }
+  
   const pct = clamp(currentEnemy.hp / currentEnemy.maxHp * 100, 0, 100);
-  const bar = document.getElementById('ehp-bar');
-  bar.style.width = pct + '%';
-  if (pct < 30) bar.classList.add('low');
-  else bar.classList.remove('low');
-  document.getElementById('ehud-name').textContent = currentEnemy.name;
-  document.getElementById('ehud-class').textContent = currentEnemy.class || '';
-  document.getElementById('ehp-val').textContent = currentEnemy.hp + '/' + currentEnemy.maxHp;
-  document.getElementById('eatk').textContent = currentEnemy.atk;
-  document.getElementById('edef').textContent = currentEnemy.def;
+  if (ehpBar) {
+    ehpBar.style.width = pct + "%";
+    if (pct < 30) ehpBar.classList.add("low");
+    else ehpBar.classList.remove("low");
+  }
+  
+  if (ehudName) ehudName.textContent = currentEnemy.name;
+  if (ehudClass) ehudClass.textContent = currentEnemy.class || "";
+  if (ehpVal) ehpVal.textContent = currentEnemy.hp + "/" + currentEnemy.maxHp;
+  if (eatk) eatk.textContent = currentEnemy.atk;
+  if (edef) edef.textContent = currentEnemy.def;
 }
 
 function updateDungeonBar() {
   const fl = player.floor || 1;
-  document.getElementById('floor-chip').textContent = 'B' + fl + 'F';
-  document.getElementById('floor-disp').textContent = '第 ' + fl + ' 層';
-  document.getElementById('floor-trk').style.width = ((fl % 10) / 10 * 100) + '%';
+  const chip = document.getElementById('floor-chip');
+  if (chip) chip.textContent = 'B' + fl + 'F';
+  
+  const disp = document.getElementById('floor-disp');
+  if (disp) disp.textContent = '第 ' + fl + ' 層';
+  
+  const trk = document.getElementById('floor-trk');
+  if (trk) trk.style.width = ((fl % 10) / 10 * 100) + '%';
+  
   const bw = document.getElementById('boss-warn-txt');
-  bw.style.display = fl % 10 === 0 ? 'inline' : 'none';
+  if (bw) bw.style.display = fl % 10 === 0 ? 'inline' : 'none';
 }

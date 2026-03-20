@@ -41,7 +41,6 @@ const LS_KEYS = {
 
 // ── 伺服器靜態檔案路徑 ──
 const FILE_PATHS = {
-  vocab:   'data/vocab.csv',
   grammar: 'data/grammar.csv',
   items:   'data/items.json',
 };
@@ -54,55 +53,71 @@ function parseCSV(text) {
   let currentRow = [];
   let currentField = '';
   let inQuotes = false;
+  let i = 0;
 
-  for (let i = 0; i < text.length; i++) {
+  while (i < text.length) {
     const char = text[i];
     const nextChar = text[i + 1];
 
     if (inQuotes) {
-      if (char === '"' && nextChar === '"') { currentField += '"'; i++; }
-      else if (char === '"') { inQuotes = false; }
-      else { currentField += char; }
+      if (char === '"' && nextChar === '"') {
+        currentField += '"';
+        i += 2;
+      } else if (char === '"') {
+        inQuotes = false;
+        i++;
+      } else {
+        currentField += char;
+        i++;
+      }
     } else {
       if (char === '"') {
         inQuotes = true;
+        i++;
       } else if (char === ',') {
-        currentRow.push(currentField.trim());
+        currentRow.push(currentField); // Keep raw content including spaces
         currentField = '';
+        i++;
       } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
-        currentRow.push(currentField.trim());
-        if (currentRow.some(f => f !== '')) rows.push(currentRow);
+        currentRow.push(currentField);
+        if (currentRow.some(f => f.trim() !== '')) rows.push(currentRow);
         currentRow = [];
         currentField = '';
-        if (char === '\r') i++;
+        if (char === '\r') i += 2;
+        else i++;
       } else {
         currentField += char;
+        i++;
       }
     }
   }
-  // 最後一行
   if (currentField || currentRow.length > 0) {
-    currentRow.push(currentField.trim());
-    if (currentRow.some(f => f !== '')) rows.push(currentRow);
+    currentRow.push(currentField);
+    if (currentRow.some(f => f.trim() !== '')) rows.push(currentRow);
   }
 
   if (rows.length < 2) return [];
 
   const headers = rows[0].map(h => h.trim());
   const result = [];
-  for (let i = 1; i < rows.length; i++) {
-    const values = rows[i];
+  for (let j = 1; j < rows.length; j++) {
+    const values = rows[j];
     if (values.length < headers.length) continue;
     const obj = {};
-    headers.forEach((header, index) => { obj[header] = values[index]; });
+    headers.forEach((header, index) => {
+      // Trim only for certain columns, or globally if preferred.
+      // Here we trim values as CSV standard often ignores leading/trailing spaces outside quotes.
+      obj[header] = (values[index] || '').trim();
+    });
     result.push(obj);
   }
   return result;
 }
 
+// Keep only one definition for parseGrammarOptions
 function parseGrammarOptions(optionsStr) {
   if (!optionsStr) return [];
-  return optionsStr.split('|').map(opt => opt.trim());
+  return optionsStr.split("|").map(opt => opt.trim());
 }
 
 function parseGrammarAnswer(answerStr) {
@@ -128,24 +143,8 @@ function parseEffect(effectStr) {
 // 從伺服器載入靜態資料（唯讀）
 // ══════════════════════════════════════════════
 async function fetchVocab() {
-  try {
-    const res = await fetch(FILE_PATHS.vocab);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const data = parseCSV(text);
-    return data.map(item => ({
-      id: item.id || String(Date.now() + Math.random()),
-      word: item.word || '',
-      pos: item.pos || '',
-      def: item.def || '',
-      zh: item.zh || '',
-      level: item.level || 'intermediate',
-      sentence: item.sentence || '',
-    })).filter(item => item.word);
-  } catch (e) {
-    console.error('[Storage] fetchVocab failed:', e);
-    return [];
-  }
+  // Vocab 功能已併入 Grammar
+  return [];
 }
 
 async function fetchGrammar() {
@@ -291,8 +290,8 @@ async function initStorage() {
   // 載入完成提示
   setTimeout(() => {
     if (typeof toast === 'function') {
-      if (vWords.length > 0 || gQuestions.length > 0) {
-        toast(`📚 載入完成：${vWords.length} 詞彙 · ${gQuestions.length} 文法題`, 'var(--green)');
+      if (gQuestions.length > 0) {
+        toast(`📚 題庫載入完成：${gQuestions.length} 道題目`, 'var(--green)');
       } else {
         toast('⚠️ 題庫載入失敗，請確認 data/ 資料夾與 CSV 檔案存在', 'var(--red)');
       }

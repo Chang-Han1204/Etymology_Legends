@@ -1,6 +1,8 @@
 // ══════════════════════════════════════════════
 // GLOBAL VARIABLES
 // ══════════════════════════════════════════════
+let currentEnemy = null; // Declare currentEnemy globally
+
 function defPlayer() {
   return {
     lv: 1, exp: 0, expNext: 100, hp: 100, maxHp: 100, mp: 50, maxMp: 50,

@@ -91,10 +91,7 @@ function renderDataPanel() {
 }
 
 function renderVList() {
-  const el = document.getElementById('vocab-list');
-  if (el) {
-    el.innerHTML = vWords.map(w => `<div>${w.word} - ${w.def}</div>`).join('');
-  }
+  // Vocab 功能已併入 Grammar
 }
 
 function renderGList() {
@@ -284,7 +281,7 @@ function updHeader() {
   const hMaxFloor = document.getElementById('h-maxfloor');
   const hBoss = document.getElementById('h-boss');
   
-  if (hVocab) hVocab.textContent = vWords.length;
+  if (hVocab) hVocab.textContent = '-';
   if (hGrammar) hGrammar.textContent = gQuestions.length;
   if (hItems) hItems.textContent = Object.keys(ITEMS).length;
   if (hRelics) hRelics.textContent = (player.relics || []).length;
@@ -319,17 +316,10 @@ function updHeader() {
 // 添加調試功能
 function checkData() {
   console.log('=== 數據檢查 ===');
-  console.log('vWords.length:', vWords.length);
   console.log('gQuestions.length:', gQuestions.length);
   console.log('ITEMS keys:', Object.keys(ITEMS).length);
   console.log('player.lv:', player.lv);
   console.log('player.floor:', player.floor);
-  
-  // 檢查前5個單字
-  console.log('前5個單字:');
-  vWords.slice(0, 5).forEach((w, i) => {
-    console.log(`${i+1}. ${w.word} (${w.level}) - ${w.sentence}`);
-  });
   
   // 檢查前3個文法題
   console.log('前3個文法題:');
