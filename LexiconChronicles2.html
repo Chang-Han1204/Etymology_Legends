@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>詞源傳說 II — LEXICON CHRONICLES</title>
+<title>Etymology Legends</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +25,8 @@
   <div class="game-title">
     <div class="title-row">
       <div>
-        <div class="title-px">⚔ 詞源傳說 II ⚔</div>
-        <div class="title-sub">LEXICON CHRONICLES — 語言冒險錄</div>
+        <div class="title-px">⚔ Etymology Legends ⚔</div>
+        <div class="title-sub">Unlock the Power of Words</div>
       </div>
     </div>
   </div>
@@ -42,7 +42,8 @@
     <span class="floor-chip" id="floor-chip">WAVE 1</span>
     <span id="wave-timer" style="font-family:var(--font-px); font-size:8px; color:var(--orange2); margin-left:5px">00:00</span>
     <div class="floor-track"><div class="floor-track-fill" id="floor-trk" style="width:0%"></div></div>
-    <span class="d-stat">💰 <strong id="exp-disp" style="color:var(--gold2)">0</strong></span>
+    <span class="d-stat" style="margin-left:5px">Lv.<strong id="plv-disp">1</strong></span>
+    <span class="d-stat" style="margin-left:5px">💰<strong id="exp-disp" style="color:var(--gold2)">0</strong></span>
   </div>
 
   <!-- MAIN TABS -->
@@ -68,7 +69,7 @@
       <div class="card" style="text-align:center;padding:1.75rem">
         <!-- Pixel dungeon entrance art -->
         <div style="font-family:var(--font-px);font-size:32px;margin-bottom:.5rem;color:var(--torch2);text-shadow:0 0 20px var(--torch)">🏰</div>
-        <div style="font-family:var(--font-px);font-size:9px;color:var(--gold2);margin-bottom:.3rem;letter-spacing:2px">詞源傳說 II：戰鬥模式</div>
+        <div style="font-family:var(--font-px);font-size:9px;color:var(--gold2);margin-bottom:.3rem;letter-spacing:2px">Etymology Legends: Battle Mode</div>
         <div style="font-family:var(--font-vt);font-size:18px;color:var(--text2);margin-bottom:1.2rem;line-height:1.7">
           敵人的波次即將到來！<br>
           答對英文題目賺取金幣，召喚士兵守護主堡。<br>
@@ -94,7 +95,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:0 4px">
         <span id="dqpl" style="font-family:var(--font-px); font-size:8px; color:var(--gold2)">Q1</span>
         <div style="flex:1; margin:0 10px; height:6px; background:var(--bg); border:1px solid var(--border); overflow:hidden">
-          <div id="dqpf" style="width:0%; height:100%; background:var(--gold)"></div>
+          <div id="dqpf" style="height:100%; background:var(--gold)"></div>
         </div>
         <div style="font-family:var(--font-px); font-size:6px; color:var(--text2)">
           ✅<span id="dqc">0</span> ❌<span id="dqw">0</span>
@@ -105,41 +106,41 @@
       <div class="card" style="margin-bottom:8px; padding:8px">
         <div class="q-head" style="margin-bottom:5px">🛡️ 召喚士兵</div>
         <div class="btn-row" style="justify-content:space-around; gap: 4px;">
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士: 地屬性，基礎近戰">
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士 (T1): 地屬性，基礎近戰">
             🗡️ 戰士 ($100)<br><small style="font-size:8px;">🌿</small>
           </button>
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-skeleton" onclick="summonSoldier('skeleton')" title="骨骸戰士: 地屬性，高攻擊力">
-            💀 骨骸 ($150)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-rock_thrower" onclick="summonSoldier('rock_thrower')" title="投石者 (T2): 地屬性，遠程攻擊">
+            🪨 投石 ($250)<br><small style="font-size:8px;">🌿</small>
           </button>
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士: 地屬性，高生命值">
-            🛡️ 聖騎 ($400)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士 (T3): 地屬性，高生命坦克">
+            🛡️ 聖騎 ($450)<br><small style="font-size:8px;">🌿</small>
           </button>
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-hero" onclick="summonSoldier('hero')" title="英雄: 地屬性，全能強者">
-            ✨ 英雄 ($800)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-hero" onclick="summonSoldier('hero')" title="大地英雄 (T4): 地屬性，終極單位">
+            ✨ 英雄 ($750)<br><small style="font-size:8px;">🌿</small>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手: 水屬性，遠程射手">
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手 (T1): 水屬性，遠程射手">
             🏹 弓手 ($100)<br><small style="font-size:8px;">💧</small>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客: 水屬性，極高速度與爆發">
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客 (T2): 水屬性，高速爆發">
             🔪 刺客 ($250)<br><small style="font-size:8px;">💧</small>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客: 水屬性，快速穿透">
-            👻 幽靈 ($400)<br><small style="font-size:8px;">💧</small>
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客 (T3): 水屬性，快速近戰">
+            👻 幽靈 ($450)<br><small style="font-size:8px;">💧</small>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="牧師: 水屬性，輔助型">
-            ⚕️ 牧師 ($500)<br><small style="font-size:8px;">💧</small>
+          <button class="btn btn-sm btn-gray el-water" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="大主祭 (T4): 水屬性，遠程高傷">
+            ⚕️ 主祭 ($750)<br><small style="font-size:8px;">💧</small>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師: 火屬性，遠程魔法傷害">
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師 (T1): 火屬性，遠程魔法">
             🧙 魔法 ($100)<br><small style="font-size:8px;">🔥</small>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神: 火屬性，範圍高傷">
-            👻 死神 ($350)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神 (T2): 火屬性，近戰收割">
+            💀 死神 ($250)<br><small style="font-size:8px;">🔥</small>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-knight" onclick="summonSoldier('knight')" title="騎士: 火屬性，高防禦坦克">
-            🐎 騎士 ($500)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-knight" onclick="summonSoldier('knight')" title="烈焰騎士 (T3): 火屬性，攻防一體">
+            🐎 騎士 ($450)<br><small style="font-size:8px;">🔥</small>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主: 火屬性，終極強者">
-            🐉 龍領 ($1000)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主 (T4): 火屬性，終極破壞">
+            🐉 龍領 ($750)<br><small style="font-size:8px;">🔥</small>
           </button>
         </div>
         <div style="font-size:9px; color:var(--text3); text-align:center; margin-top:5px">
@@ -182,6 +183,11 @@
         <div style="font-size:12px; color:var(--text3)">可用寶石點數</div>
       </div>
       
+      <div class="lvl-group" style="justify-content: center; margin-bottom: 15px;">
+        <button class="lvl-btn on" id="tab-up-earth" onclick="renderUpgradeMenu('EARTH')">🌿 地屬性</button>
+        <button class="lvl-btn" id="tab-up-water" onclick="renderUpgradeMenu('WATER')">💧 水屬性</button>
+        <button class="lvl-btn" id="tab-up-fire" onclick="renderUpgradeMenu('FIRE')">🔥 火屬性</button>
+      </div>
       <div id="upgrade-list" class="upgrade-grid">
         <!-- 強化項目與士兵屬性預覽將整合在此處渲染 -->
       </div>
@@ -192,23 +198,41 @@
   <div id="mod-data" class="section">
 
     <div class="card">
-      <div class="card-title" style="color:var(--gold2)">💾 存檔管理</div>
-      <div class="btn-row" style="justify-content:center;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-blue"  onclick="exportData()">📤 匯出存檔</button>
-        <button class="btn btn-green" onclick="importData ? importData() : alert('功能開發中')">📥 匯入存檔</button>
-        <button class="btn btn-red"   onclick="resetData()">🗑️ 刪除存檔</button>
-      </div>
-    </div>
-
-    <div class="card">
       <div class="card-title" style="color:var(--cyan2)">📊 遊戲統計</div>
       <div class="stats-grid">
-        <div class="stat-box"><span class="stat-ico">🏰</span><div class="stat-info"><span class="stat-lbl">最深樓層</span><div class="stat-val" id="stat-total-floors">0</div></div></div>
-        <div class="stat-box"><span class="stat-ico">⚔️</span><div class="stat-info"><span class="stat-lbl">總擊殺數</span><div class="stat-val" id="stat-total-kills">0</div></div></div>
-        <div class="stat-box" style="display:none"><span class="stat-ico">📚</span><div class="stat-info"><span class="stat-lbl">詞彙庫</span><div class="stat-val" id="h-vocab" style="color:var(--green2)">0</div></div></div>
+
         <div class="stat-box"><span class="stat-ico">📝</span><div class="stat-info"><span class="stat-lbl">題庫總數</span><div class="stat-val" id="h-grammar" style="color:var(--blue2)">0</div></div></div>
         <div class="stat-box"><span class="stat-ico">💎</span><div class="stat-info"><span class="stat-lbl">持有寶石</span><div class="stat-val" id="stat-gems" style="color:var(--cyan2)">0</div></div></div>
       </div>
+
+      <div class="card" style="margin-top:10px; background:rgba(0,0,0,0.2)">
+        <div class="card-title" style="font-size:12px; color:var(--gold)">👑 領主進度與戰鬥機制</div>
+        <div style="font-size:13px; color:var(--text2); line-height:1.6">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:10px">
+            <div class="stat-mini-box">
+              <div class="stat-mini-lbl">🎖️ 當前等級</div>
+              <div class="stat-mini-val" id="detail-lv">1</div>
+            </div>
+            <div class="stat-mini-box">
+              <div class="stat-mini-lbl">📈 經驗值</div>
+              <div class="stat-mini-val" id="detail-exp">0 / 0</div>
+            </div>
+            <div class="stat-mini-box">
+              <div class="stat-mini-lbl">💰 答對賞金</div>
+              <div class="stat-mini-val" id="detail-reward">0</div>
+            </div>
+            <div class="stat-mini-box">
+              <div class="stat-mini-lbl">💔 答錯懲罰</div>
+              <div class="stat-mini-val" id="detail-penalty">0</div>
+            </div>
+          </div>
+          <p style="margin-bottom:5px">💡 <strong style="color:var(--gold2)">成長機制：</strong>領主等級越高，答對英文題目時獲得的金幣就越多（50 + 等級×5），讓您能更快速召喚強力單位。然而，答錯時主堡受到的傷害也會隨等級提升（20 + 等級×5）。</p>
+          <p>🛡️ <strong style="color:var(--cyan2)">守護城堡：</strong>妥善利用金幣召喚不同屬性的士兵。地、水、火三屬性間存在克制關係，正確的戰略佈署才是獲勝關鍵。</p>
+        </div>
+      </div>
+      
+      <!-- 新增詳細統計容器 -->
+      <div id="new-stats-container"></div>
     </div>
 
     <div class="card">

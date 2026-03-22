@@ -17,6 +17,53 @@ window.addEventListener('resize', () => { resizeCanvas(); if (!animFrame) render
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', resizeCanvas);
 else resizeCanvas();
 
+const ETYMOLOGY_LEGENDS_TITLE = {
+  pixels: [
+    // 上方空白區
+    ...Array(5).fill(Array(120).fill(0)),
+    // 0-10: 頂部結構 (尖塔與旗幟)
+    [7,7,0,0,0,0,0,0, ...Array(104).fill(0), 0,0,0,10,10,10,0,0], 
+    [6,7,7,0,0,0,0,0, ...Array(104).fill(0), 0,0,10,10,11,10,10,0],
+    [6,6,6,0,0,0,0,0, ...Array(104).fill(0), 0,0,0,9,11,9,0,0,0],
+    [0,6,0,0,0,0,0,0, ...Array(104).fill(0), 0,0,0,9,9,9,0,0,0],
+    
+    // 11-20: 中段 (城垛與窗戶)
+    [6,6,6,6,6,0,0,0, ...Array(104).fill(0), 0,0,9,9,9,9,9,0],
+    [6,8,6,8,6,0,0,0, ...Array(104).fill(0), 0,0,9,11,9,11,9,0],
+    [6,6,6,6,6,0,0,0, ...Array(104).fill(0), 0,0,9,9,9,9,9,0],
+    [6,6,6,6,6,0,0,0, ...Array(104).fill(0), 0,0,9,9,11,9,9,0],
+    
+    // 21-34: 基座 (最寬處，1/7 寬度約 17-18px)
+    [6,6,6,6,6,6,6,6,0, ...Array(102).fill(0), 0,9,9,9,9,9,9,9,9],
+    [6,8,6,8,6,8,6,8,0, ...Array(102).fill(0), 0,9,11,11,11,11,11,9,9],
+    [6,6,6,6,6,6,6,6,0, ...Array(102).fill(0), 0,9,9,11,11,11,9,9,9],
+    [6,6,6,12,12,6,6,6,0, ...Array(102).fill(0), 0,9,9,9,11,9,9,9,9],
+    [6,6,6,12,12,6,6,6,0, ...Array(102).fill(0), 0,9,9,9,9,9,9,9,9],
+    [6,6,6,6,6,6,6,6,6,0, ...Array(101).fill(0), 9,9,9,9,9,9,9,9,9,9],
+    [6,6,6,6,6,6,6,6,6,0, ...Array(101).fill(0), 9,9,9,9,9,9,9,9,9,9],
+    
+    // 35-40: 壓低的地平線與分割領土
+    [...Array(60).fill(3), ...Array(60).fill(4)], // 35 
+  ],
+  colors: [
+    'transparent', // 0
+    '#ffffff', 
+    '#ffffff', 
+    '#1b3022',     // 3: 深橄欖綠 (秩序領土 - 更有戰爭質感)
+    '#2d1616',     // 4: 焦紅黑 (混亂領土)
+    '#0d1a11',     // 5: 秩序深土
+    '#717d7e',     // 6: 城堡舊化石磚 (灰)
+    '#2471a3',     // 7: 藍色軍旗
+    '#aed6f1',     // 8: 藍色魔力窗
+    '#1c1c1c',     // 9: 怪物點黑曜石
+    '#943126',     // 10: 邪惡骨刺
+    '#ff0000',     // 11: 誕生點核心紅
+    '#f4d03f',     // 12: 城堡主門燈火
+    '#ffffff', 
+    '#140a0a'      // 14: 混亂深土
+  ]
+};
+
 const CHAR_SPRITES = {
   player: {
     pixels: [
@@ -420,11 +467,11 @@ let battleAnim = { playerShake:0, enemyShake:0, flash:0, flashColor:'#fff', bg:0
 let animFrame = null;
 
 function getBattleBg(floor) {
-  if (floor >= 40) return { sky:'#040010', wall:'#09001e', ground:'#0e0026', stone:'#160038' };
-  if (floor >= 30) return { sky:'#070008', wall:'#0f0010', ground:'#160015', stone:'#220020' };
-  if (floor >= 20) return { sky:'#060008', wall:'#0e000e', ground:'#130012', stone:'#1e0018' };
-  if (floor >= 10) return { sky:'#080500', wall:'#100900', ground:'#160d00', stone:'#201408' };
-  return               { sky:'#07080e', wall:'#0d0d18', ground:'#111120', stone:'#181830' };
+  if (floor >= 40) return { sky:'#040010', wall:'#09001e', ground:'#0e0026', stone:'#160038', accent: '#4b0082' };
+  if (floor >= 30) return { sky:'#070008', wall:'#0f0010', ground:'#160015', stone:'#220020', accent: '#8b0000' };
+  if (floor >= 20) return { sky:'#060008', wall:'#0e000e', ground:'#130012', stone:'#1e0018', accent: '#483d8b' };
+  if (floor >= 10) return { sky:'#080500', wall:'#100900', ground:'#160d00', stone:'#201408', accent: '#8b4513' };
+  return               { sky:'#07080e', wall:'#0d0d18', ground:'#111120', stone:'#181830', accent: '#2f4f4f' };
 }
 
 function drawStoneWall(x, y, w, h, col, mortar) {
@@ -452,20 +499,75 @@ function drawTorch(x, y, t) {
 }
 
 function drawCastle(ctx, x, y) {
-  // 繪製一個簡單的像素風格城堡
-  ctx.fillStyle = '#404050';
-  ctx.fillRect(x, y - 60, 60, 60); // 主體
-  ctx.fillStyle = '#303040';
-  ctx.fillRect(x - 5, y - 70, 20, 30); // 左塔
-  ctx.fillRect(x + 45, y - 70, 20, 30); // 右塔
-  ctx.fillStyle = '#202030';
-  ctx.fillRect(x + 20, y - 30, 20, 30); // 大門
-  // 城堡血條
+  const t = Date.now() * 0.002;
+  const flicker = Math.sin(t * 2) * 0.1 + 0.9;
+  
+  // 縮小比例以適應 H=140 的畫面
+  const s = 0.7; 
+  
+  // 1. 城堡主體 (深灰色與陰影)
+  ctx.fillStyle = '#2c2c3e'; // 牆壁
+  ctx.fillRect(x, y - 70 * s, 70 * s, 70 * s);
+  ctx.fillStyle = '#1a1a2e'; // 陰影
+  ctx.fillRect(x + 50 * s, y - 70 * s, 20 * s, 70 * s);
+  
+  // 2. 塔樓 (左右兩側)
+  ctx.fillStyle = '#3d3d5c';
+  ctx.fillRect(x - 10 * s, y - 90 * s, 25 * s, 90 * s); // 左塔
+  ctx.fillRect(x + 55 * s, y - 90 * s, 25 * s, 90 * s); // 右塔
+  
+  // 3. 塔頂 (藍紫色)
+  ctx.fillStyle = '#483d8b';
+  ctx.beginPath();
+  ctx.moveTo(x - 15 * s, y - 90 * s); ctx.lineTo(x + 2.5 * s, y - 120 * s); ctx.lineTo(x + 20 * s, y - 90 * s);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + 50 * s, y - 90 * s); ctx.lineTo(x + 67.5 * s, y - 120 * s); ctx.lineTo(x + 85 * s, y - 90 * s);
+  ctx.fill();
+
+  // 4. 城牆鋸齒 (Battlement)
+  ctx.fillStyle = '#1a1a2e';
+  for(let i=0; i<5; i++) {
+    ctx.fillRect(x + (i*14 + 2) * s, y - 75 * s, 8 * s, 8 * s);
+  }
+
+  // 5. 大門 (帶有金屬質感)
+  ctx.fillStyle = '#4a2c2a'; // 木頭
+  ctx.fillRect(x + 20 * s, y - 35 * s, 30 * s, 35 * s);
+  ctx.strokeStyle = '#c89820'; // 金邊
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 22 * s, y - 33 * s, 26 * s, 33 * s);
+  
+  // 6. 魔法核心/窗戶 (發光效果)
+  ctx.globalAlpha = flicker;
+  ctx.fillStyle = '#00ffff';
+  ctx.fillRect(x + 2 * s, y - 85 * s, 10 * s, 10 * s); // 左塔窗
+  ctx.fillRect(x + 68 * s, y - 85 * s, 10 * s, 10 * s); // 右塔窗
+  ctx.shadowBlur = 5;
+  ctx.shadowColor = '#00ffff';
+  ctx.fillRect(x + 30 * s, y - 55 * s, 10 * s, 12 * s); // 主城核心
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1.0;
+
+  // 7. 旗幟 (隨風飄動感)
+  const wave = Math.sin(t * 3) * 3;
+  ctx.fillStyle = '#f03040';
+  ctx.beginPath();
+  ctx.moveTo(x + 2.5 * s, y - 120 * s); ctx.lineTo(x + (2.5 + 15) * s + wave, y - 110 * s); ctx.lineTo(x + 2.5 * s, y - 105 * s);
+  ctx.fill();
+
+  // 8. 城堡血條 (位置調低，確保在畫布內)
   const pct = Dungeon.castleHp / Dungeon.maxCastleHp;
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(x, y - 85, 60, 6);
-  ctx.fillStyle = pct > 0.3 ? '#4cbc4c' : '#f03040';
-  ctx.fillRect(x + 1, y - 84, 58 * pct, 4);
+  const barY = y - 130 * s; // H=140, gY=106. 106 - 130*0.7 = 106 - 91 = 15.
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x - 5 * s, barY, 80 * s, 8 * s);
+  ctx.strokeStyle = '#c89820';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x - 6 * s, barY - 1, 82 * s, 10 * s);
+  
+  const barColor = pct > 0.6 ? '#4cbc4c' : (pct > 0.3 ? '#eab830' : '#f03040');
+  ctx.fillStyle = barColor;
+  ctx.fillRect(x - 3 * s, barY + 2, 76 * s * pct, 4 * s);
 }
 
 function renderBattleCanvas() {
@@ -475,22 +577,57 @@ function renderBattleCanvas() {
   
   const W = cvW, H = cvH;
   const gY = Math.round(H * 0.76);
-  
+  const floor = (typeof player !== 'undefined' && player?.floor) || 1;
+  const bg = getBattleBg(floor);
+  const t = Date.now() * 0.001;
+
   // 1. 更新邏輯
   if (typeof Dungeon !== 'undefined' && Dungeon.active) {
     updateBattleLogic();
   }
 
   // 2. 渲染背景
-  const floor = (typeof player !== 'undefined' && player?.floor) || 1;
-  const bg = getBattleBg(floor);
   ctx2.fillStyle = bg.sky; ctx2.fillRect(0, 0, W, H);
-  drawStoneWall(0, 0, W, Math.round(H * 0.16), bg.wall, bg.stone);
+
+  // --- 如果不是戰鬥中，顯示封面畫面 ---
+  if (typeof Dungeon !== 'undefined' && !Dungeon.active) {
+    renderTitleScreen(ctx2, W, H, t);
+    battleAnim.bg++;
+    animFrame = requestAnimationFrame(renderBattleCanvas);
+    return;
+  }
   
+  // 遠景：星星與雲朵
+  ctx2.fillStyle = '#fff';
+  for(let i=0; i<15; i++) {
+    const sX = (Math.sin(i * 123.45) * 0.5 + 0.5) * W;
+    const sY = (Math.cos(i * 678.90) * 0.5 + 0.5) * (H * 0.4);
+    const alpha = Math.sin(t + i) * 0.3 + 0.7;
+    ctx2.globalAlpha = alpha;
+    ctx2.fillRect(sX, sY, 1, 1);
+  }
+  ctx2.globalAlpha = 0.1;
+  ctx2.fillStyle = bg.accent;
+  for(let i=0; i<3; i++) {
+    const cX = ((t * (10 + i * 5)) + i * 200) % (W + 200) - 100;
+    ctx2.fillRect(cX, 20 + i * 15, 80, 20);
+  }
+  ctx2.globalAlpha = 1.0;
+
+  // 城牆與地面
+  drawStoneWall(0, 0, W, Math.round(H * 0.16), bg.wall, bg.stone);
   const ww = Math.round(W * 0.065);
   drawStoneWall(0, 0, ww, H, bg.wall, bg.stone);
   drawStoneWall(W - ww, 0, ww, H, bg.wall, bg.stone);
   drawStoneWall(0, gY, W, H - gY, bg.ground, bg.stone);
+
+  // 地面細節 (裂縫、碎石)
+  ctx2.fillStyle = bg.stone;
+  for(let i=0; i<10; i++) {
+    const dX = (Math.sin(i * 555) * 0.5 + 0.5) * W;
+    const dY = gY + (Math.cos(i * 999) * 0.5 + 0.5) * (H - gY - 5);
+    ctx2.fillRect(dX, dY, 4, 1);
+  }
 
   // 繪製城堡 (移動到背景牆之後，確保不被擋住)
   drawCastle(ctx2, 10 + ww, gY);
@@ -711,4 +848,79 @@ function triggerHitEffect(target, x, color){
 function triggerCritEffect(){
   battleAnim.flash=0.42; battleAnim.flashColor='#ff8800';
   for(let i=0;i<20;i++) battleAnim.particles.push({x:cvW*0.74,y:cvH*0.4,vx:(Math.random()-.5)*9,vy:-Math.random()*9,life:1,color:['#ff8000','#ffcc00','#ffffff','#ff4000'][i%4],size:3+Math.random()*5});
+}
+
+function renderTitleScreen(ctx, W, H, t) {
+  const spec = ETYMOLOGY_LEGENDS_TITLE;
+  const rows = spec.pixels.length;
+  const cols = spec.pixels[0].length;
+  
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景：極致深邃的夜空
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+  skyGrad.addColorStop(0, '#050505');
+  skyGrad.addColorStop(1, '#101015');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  const px = Math.min(W / cols, H / rows);
+  const startX = (W - cols * px) / 2;
+  const startY = (H - rows * px) / 2;
+
+  // 1. 繪製所有像素 (建築與地板)
+  for (let r = 0; r < rows; r++) {
+    const rowData = spec.pixels[r];
+    if (!rowData) continue; // 安全檢查
+    
+    for (let c = 0; c < cols; c++) {
+      const ci = rowData[c];
+      if (ci === 0 || ci === undefined) continue;
+      
+      ctx.globalAlpha = 1.0;
+      
+      // 動態特效
+      if (ci === 11) { // 怪物核心脈動
+        ctx.globalAlpha = 0.4 + Math.abs(Math.sin(t * 4)) * 0.6;
+      } else if (ci === 12 || ci === 8) { // 城堡燈光微閃
+        ctx.globalAlpha = 0.8 + Math.random() * 0.2;
+      }
+
+      ctx.fillStyle = spec.colors[ci];
+      ctx.fillRect(startX + c * px, startY + r * px, Math.ceil(px), Math.ceil(px));
+    }
+  }
+
+  // 2. 繪製標題文字 (置中)
+  ctx.globalAlpha = 1.0;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const centerX = W / 2;
+  const centerY = H / 2;
+
+  // 標題發光背景
+  const titleGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, px * 40);
+  titleGlow.addColorStop(0, 'rgba(241, 196, 15, 0.1)');
+  titleGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = titleGlow;
+  ctx.fillRect(0, 0, W, H);
+
+  // 主標題：強化質感的雙色
+  ctx.font = `italic bold ${px * 10}px "Georgia", serif`;
+  ctx.shadowColor = 'black';
+  ctx.shadowBlur = 10;
+  
+  const textGrad = ctx.createLinearGradient(centerX - px * 20, 0, centerX + px * 20, 0);
+  textGrad.addColorStop(0, '#5dade2'); 
+  textGrad.addColorStop(1, '#ec7063');
+  
+  ctx.fillStyle = textGrad;
+  ctx.fillText('Etymology Legends', centerX, centerY - px * 2);
+
+  // 副標題
+  ctx.shadowBlur = 0;
+  ctx.font = `bold ${px * 3.5}px monospace`;
+  ctx.fillStyle = '#f1c40f';
+  ctx.fillText('🛡️ DEFEND THE ROOT ⚔️', centerX, centerY + px * 6);
 }

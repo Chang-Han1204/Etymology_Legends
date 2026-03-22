@@ -110,12 +110,3 @@ function speakGrammarSentence(sentence) {
   speak(sentence, 0.9, 1.0);
 }
 
-// 測試語音功能
-function testSpeech() {
-  if ('speechSynthesis' in window) {
-    speak('Hello! This is a test of the text-to-speech system.', 0.9, 1.0);
-  } else {
-    console.warn('Text-to-speech not supported in this browser');
-    alert('您的瀏覽器不支援文字轉語音功能');
-  }
-}

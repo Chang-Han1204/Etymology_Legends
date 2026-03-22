@@ -385,18 +385,23 @@ body::after {
 .define-box,
 .dialogue-box {
   font-family: var(--font-vt) !important;
-  font-size: 22px !important; /* 縮小字體 */
+  font-size: 20px !important; /* 縮小字體 */
   color: var(--title) !important;
   font-style: normal !important;
   font-weight: normal !important;
-  line-height: 1.4 !important; /* 縮小行高 */
-  margin-bottom: 6px !important; /* 縮小間距 */
+  line-height: 1.2 !important; /* 縮小行高 */
+  margin-bottom: 4px !important; /* 縮小間距 */
   /* 清除 dungeon.js 加上的各種 background / border / padding / border-radius */
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   padding: 0 !important;
   text-align: left !important;
+}
+
+/* 確保所有題目相關內容都不會有粗體 */
+#dqcard, #dqcard *, .q-card, .q-card * {
+  font-weight: 400 !important;
 }
 
 /* 詞彙填空底線 */
@@ -409,11 +414,11 @@ body::after {
 /* 對話題的每行文字也統一 */
 .chat-msg {
   font-family: var(--font-vt) !important;
-  font-size: 24px !important;
+  font-size: 20px !important;
   color: var(--title) !important;
   font-style: normal !important;
   font-weight: normal !important;
-  line-height: 1.5 !important;
+  line-height: 1.2 !important;
   margin-bottom: 2px;
 }
 /* prompt 行（B: Select...）稍微暗一點就夠了 */
@@ -421,20 +426,47 @@ body::after {
 
 /* 選項按鈕 — 所有題型完全相同 */
 .opt-btn {
-  display: block; width: 100%; padding: 8px 12px; margin-bottom: 4px; /* 縮小 padding 和 margin */
+  display: block; width: 100%; padding: 6px 10px; margin-bottom: 2px; /* 縮小 padding 和 margin */
   background: var(--panel2); color: var(--title); border: 1px solid var(--border);
-  font-family: var(--font-vt) !important; font-size: 22px !important; /* 縮小字體 */
+  font-family: var(--font-vt) !important; font-size: 20px !important; /* 縮小字體 */
+  font-weight: normal !important; /* 確保選項文字不粗體 */
   text-align: left; cursor: pointer;
-  box-shadow: 2px 2px 0 rgba(0,0,0,.6); line-height: 1.3; transition: none;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.6); line-height: 1.2; transition: none;
+  
+  /* 移除點擊或 TTS 朗讀時產生的反白背景色 */
+  user-select: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.opt-btn::selection, .opt-btn *::selection {
+  background: transparent;
+}
+/* 強制選項中所有文字顏色一致，預設為淡金色 (var(--text2)) */
+.opt-btn, .opt-btn .cw, .opt-btn * {
+  color: var(--text2) !important;
+  opacity: 1 !important;
 }
 .opt-btn:hover:not(:disabled) {
-  background: var(--panel3); border-color: var(--torch); color: var(--title);
+  background: var(--panel3); border-color: var(--torch);
   transform: translateX(3px);
 }
 .opt-btn:disabled { cursor: not-allowed; }
-.opt-btn.correct { background:rgba(56,104,48,.3)!important; border-color:var(--green2)!important; color:var(--green2)!important; }
+
+/* 正確狀態：所有文字變綠 */
+.opt-btn.correct, .opt-btn.correct *, .opt-btn.correct .cw {
+  background: rgba(56,104,48,.3) !important;
+  border-color: var(--green2) !important;
+  color: var(--green2) !important;
+}
 .opt-btn.correct::before { content:'✔ '; }
-.opt-btn.wrong   { background:rgba(192,32,48,.3)!important; border-color:var(--red2)!important; color:var(--red2)!important; }
+
+/* 錯誤狀態：所有文字變紅 */
+.opt-btn.wrong, .opt-btn.wrong *, .opt-btn.wrong .cw {
+  background: rgba(192,32,48,.3) !important;
+  border-color: var(--red2) !important;
+  color: var(--red2) !important;
+}
 .opt-btn.wrong::before   { content:'✖ '; }
 
 /* 文法選項的 A. B. C. D. 標籤：dungeon.js 用 <strong style="color:var(--cyan)">
@@ -442,8 +474,16 @@ body::after {
 .opt-btn strong {
   font-weight: normal !important;
   font-family: var(--font-vt) !important;
-  font-size: 22px !important; /* 縮小字體 */
+  font-size: 20px !important; /* 縮小字體 */
   color: var(--text2) !important;  /* 淡一點，讓選項內容更突出 */
+}
+
+/* 文法選項的 A. B. C. D. 標籤 */
+.opt-label {
+  font-family: var(--font-vt) !important;
+  font-size: 20px !important;
+  color: var(--cyan) !important;
+  font-weight: normal !important; /* 確保不粗體 */
 }
 
 /* 詞性標籤 [noun] [verb] 等（詞彙題） */
@@ -567,7 +607,54 @@ body::after {
 /* ══════════════
    STATS GRID
 ══════════════ */
-.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; margin-bottom: 20px; }
+
+/* New Stats Styles */
+.stats-group {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.stats-group-title {
+  font-family: var(--font-px);
+  font-size: 9px;
+  color: var(--gold2);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.stats-grid-mini {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.stat-mini-box {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid var(--cyan);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-mini-lbl {
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 2px;
+}
+
+.stat-mini-val {
+  font-family: var(--font-vt);
+  font-size: 18px;
+  color: var(--text);
+}
+
+.stat-mini-val small {
+  font-size: 12px;
+  color: var(--text3);
+  margin-left: 4px;
+}
 .stat-box {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -650,6 +737,7 @@ body::after {
   position:fixed; inset:0; background:rgba(0,0,0,.92);
   display:none; align-items:center; justify-content:center; z-index:400;
 }
+.boss-ov { pointer-events: none; background: transparent; }
 .boss-ov.show,.dead-ov.show,.chest-ov.show,.lu-ov.show { display:flex; }
 
 .boss-box {
@@ -698,12 +786,11 @@ body::after {
 .cw {
   color: inherit;           /* 跟周圍文字同色，不突兀 */
   cursor: pointer;
-  border-bottom: 1px dotted rgba(200,152,32,0.5);  /* 淡金色底線提示可點 */
+  border-bottom: none;      /* 移除底線，使外觀與普通文字一致 */
   transition: none;
 }
 .cw:hover {
-  color: var(--gold2);      /* hover 時才變金色 */
-  border-bottom-color: var(--gold2);
+  color: inherit;           /* 移除 hover 顏色變化，保持與普通文字一致 */
 }
 .tip-box { position:absolute; background:var(--panel); border:1px solid var(--torch); padding:5px 9px; font-family:var(--font-vt); font-size:15px; color:var(--text); white-space:nowrap; z-index:100; bottom:calc(100% + 6px); left:0; box-shadow:3px 3px 0 rgba(0,0,0,.7); }
 .tip-spk { background:none; border:none; cursor:pointer; padding:0 4px; font-size:13px; }

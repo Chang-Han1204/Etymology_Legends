@@ -19,7 +19,14 @@ const DEFAULT_PLAYER = {
   baseAtk: 10, baseDef: 5, critRate: 0.05,
   combo: 0, maxCombo: 0, wrongStreak: 0,
   inventory: [], equip: { weapon: null, armor: null },
-  relics: [], stats: { vocabKills: 0, grammarKills: 0, bossKills: 0 },
+  relics: [], 
+  stats: { 
+    vocabKills: 0, grammarKills: 0, bossKills: 0,
+    totalWaves: 0, totalCorrect: 0, totalWrong: 0,
+    maxCombo: 0, totalGemsEarned: 0,
+    typeStats: {}, // 按題型統計 { logic_grammar: { c: 0, w: 0 }, ... }
+    elementStats: { Water: 0, Fire: 0, Earth: 0 } // 按屬性召喚次數
+  },
   _bonusMaxHp: 0, _bonusMaxMp: 0,
   protectedByPhoenix: false, mpSkillCooldown: 0,
   gems: 0,
@@ -238,6 +245,15 @@ function ensurePlayerIntegrity() {
   if (player.equip.armor === undefined) player.equip.armor = null;
   if (!player.relics) player.relics = [];
   if (!player.stats) player.stats = { vocabKills: 0, grammarKills: 0, bossKills: 0 };
+  // 補齊新統計欄位
+  if (player.stats.totalWaves === undefined) player.stats.totalWaves = 0;
+  if (player.stats.totalCorrect === undefined) player.stats.totalCorrect = 0;
+  if (player.stats.totalWrong === undefined) player.stats.totalWrong = 0;
+  if (player.stats.maxCombo === undefined) player.stats.maxCombo = 0;
+  if (player.stats.totalGemsEarned === undefined) player.stats.totalGemsEarned = 0;
+  if (!player.stats.typeStats) player.stats.typeStats = {};
+  if (!player.stats.elementStats) player.stats.elementStats = { Water: 0, Fire: 0, Earth: 0 };
+
   if (!player.expNext) player.expNext = Math.round(100 * Math.pow(1.15, (player.lv || 1) - 1));
   // baseAtk / baseDef：兼容舊存檔（舊版用 atk/def）
   if (!player.baseAtk) player.baseAtk = player.atk || DEFAULT_PLAYER.baseAtk;

@@ -80,14 +80,79 @@ function hideItemTip() {
 // DATA MANAGEMENT
 // ══════════════════════════════════════════════
 function renderDataPanel() {
-  const v = document.getElementById('stat-total-kills');
-  if (v) v.textContent = (player.stats?.vocabKills || 0) + (player.stats?.grammarKills || 0);
+  // 基礎統計
   const g = document.getElementById('stat-total-bosses');
   if (g) g.textContent = player.stats?.bossKills || 0;
-  const f = document.getElementById('stat-total-floors');
-  if (f) f.textContent = player.totalFloors || 1;
   const gems = document.getElementById('stat-gems');
   if (gems) gems.textContent = player.gems || 0;
+
+  // 更新領主進度與戰鬥數據
+  const dLv = document.getElementById('detail-lv');
+  const dExp = document.getElementById('detail-exp');
+  const dReward = document.getElementById('detail-reward');
+  const dPenalty = document.getElementById('detail-penalty');
+  
+  if (dLv) dLv.textContent = player.lv || 1;
+  if (dExp) dExp.textContent = `${player.exp || 0} / ${player.expNext || 100}`;
+  if (dReward) dReward.textContent = `💰 ${50 + (player.lv || 1) * 5}`;
+  if (dPenalty) dPenalty.textContent = `💔 ${20 + (player.lv || 1) * 5}`;
+
+  // 詳細統計
+  const container = document.getElementById('new-stats-container');
+  if (!container) return;
+
+  const s = player.stats || {};
+  const totalAnswers = (s.totalCorrect || 0) + (s.totalWrong || 0);
+  const winRate = totalAnswers > 0 ? ((s.totalCorrect / totalAnswers) * 100).toFixed(1) : 0;
+
+  // 題型翻譯
+  const typeMap = {
+    'logic_grammar': '🛡️ 結構邏輯',
+    'fill': '📧 文本補全測驗',
+    'job_define': '💼 職場定義',
+    'response_choice': '🤝 戰略回覆'
+  };
+
+  const typeHtml = Object.keys(s.typeStats || {}).map(type => {
+    const ts = s.typeStats[type];
+    const tTotal = ts.c + ts.w;
+    const tRate = tTotal > 0 ? ((ts.c / tTotal) * 100).toFixed(0) : 0;
+    return `<div class="stat-mini-box">
+      <div class="stat-mini-lbl">${typeMap[type] || type}</div>
+      <div class="stat-mini-val">${ts.c}/${tTotal} <small>(${tRate}%)</small></div>
+    </div>`;
+  }).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text3);font-size:12px">尚無學習數據</div>';
+
+  const elemHtml = Object.keys(s.elementStats || {}).map(el => {
+    const icons = { Water: '💧', Fire: '🔥', Earth: '🌿' };
+    const colors = { Water: 'var(--blue2)', Fire: 'var(--red2)', Earth: 'var(--green2)' };
+    return `<div class="stat-mini-box" style="border-left-color:${colors[el]}">
+      <div class="stat-mini-lbl">${icons[el]} ${el}</div>
+      <div class="stat-mini-val">${s.elementStats[el]} <small>次</small></div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="stats-group">
+      <div class="stats-group-title">⚔️ 戰鬥紀錄</div>
+      <div class="stats-grid-mini">
+        <div class="stat-mini-box"><div class="stat-mini-lbl">完成波次</div><div class="stat-mini-val">${s.totalWaves || 0}</div></div>
+        <div class="stat-mini-box"><div class="stat-mini-lbl">正確率</div><div class="stat-mini-val">${winRate}%</div></div>
+        <div class="stat-mini-box"><div class="stat-mini-lbl">最高連擊</div><div class="stat-mini-val">${s.maxCombo || 0}</div></div>
+        <div class="stat-mini-box"><div class="stat-mini-lbl">累積寶石</div><div class="stat-mini-val">${s.totalGemsEarned || 0}</div></div>
+      </div>
+    </div>
+    
+    <div class="stats-group">
+      <div class="stats-group-title">📚 學習分佈 (答對/總數)</div>
+      <div class="stats-grid-mini">${typeHtml}</div>
+    </div>
+
+    <div class="stats-group">
+      <div class="stats-group-title">🛡️ 軍事動員 (召喚次數)</div>
+      <div class="stats-grid-mini">${elemHtml}</div>
+    </div>
+  `;
 }
 
 function renderVList() {
@@ -286,7 +351,6 @@ function updHeader() {
   if (hItems) hItems.textContent = Object.keys(ITEMS).length;
   if (hRelics) hRelics.textContent = (player.relics || []).length;
   if (hFloor) hFloor.textContent = '第 ' + player.floor + ' 層';
-  if (hMaxFloor) hMaxFloor.textContent = '最深：' + (player.totalFloors || player.floor) + ' 層';
   if (hBoss) hBoss.textContent = player.floor % 10 === 0 ? '⚠BOSS' : '';
   
   // 更新角色狀態
@@ -383,9 +447,6 @@ function updateCharacterInfo() {
   const relicsEl = document.getElementById('char-relics');
   
   if (floorEl) floorEl.textContent = player.floor || 1;
-  if (maxFloorEl) maxFloorEl.textContent = player.totalFloors || player.floor || 1;
-  if (vocabKillsEl) vocabKillsEl.textContent = player.stats?.vocabKills || 0;
-  if (grammarKillsEl) grammarKillsEl.textContent = player.stats?.grammarKills || 0;
   if (bossKillsEl) bossKillsEl.textContent = player.stats?.bossKills || 0;
   if (relicsEl) relicsEl.textContent = (player.relics || []).length;
 }
@@ -417,36 +478,43 @@ function mainTab(id) {
   }
 }
 
-function renderUpgradeMenu() {
+let currentUpgradeElement = 'EARTH';
+function renderUpgradeMenu(filterEl) {
+  if (filterEl) currentUpgradeElement = filterEl;
+  
   const gemsDisp = document.getElementById('upgrade-gems');
   if (gemsDisp) gemsDisp.textContent = player.gems || 0;
+
+  // 更新分頁按鈕狀態
+  document.querySelectorAll('#mod-upgrade .lvl-btn').forEach(btn => {
+    btn.classList.toggle('on', btn.id === `tab-up-${currentUpgradeElement.toLowerCase()}`);
+  });
 
   const list = document.getElementById('upgrade-list');
   if (!list) return;
 
-  // 動態獲取 UNIT_TYPES 進行渲染
-  const units = Object.keys(UNIT_TYPES);
   const icons = { 
-    warrior: "🗡️", skeleton: "💀", paladin: "🛡️", hero: "✨",
+    warrior: "🗡️", rock_thrower: "🪨", paladin: "🛡️", hero: "✨",
     archer: "🏹", assassin: "🔪", ghost: "👻", cleric: "⚕️",
-    mage: "🧙", reaper: "☠️", knight: "🐎", dragonlord: "🐉"
+    mage: "🧙", reaper: "💀", knight: "🐎", dragonlord: "🐉"
   };
+
+  // 根據屬性過濾士兵
+  const units = Object.keys(UNIT_TYPES).filter(id => UNIT_TYPES[id].element.toUpperCase() === currentUpgradeElement);
 
   list.innerHTML = units.map(id => {
     const up = player.upgrades[id] || { atk: 0, hp: 0, elem: 0 };
     const spec = UNIT_TYPES[id];
     const icon = icons[id] || "🛡️";
     
-    // 計算各項費用與當前數值 (強化增益: ATK+5, HP+20, ELEM+5%)
     const curAtk = spec.atk + (up.atk * 5);
     const curHp = spec.hp + (up.hp * 20);
-    const curElem = 1.0 + (up.elem * 0.05);
+    const curElem = 1.0 + (up.elem * 0.15);
     
     const costAtk = (up.atk + 1) * 20;
     const costHp = (up.hp + 1) * 20;
     const costElem = (up.elem + 1) * 30;
     
-    // 取得屬性資訊
     const elKey = spec.element.toUpperCase();
     const elInfo = ELEMENTS[elKey] || { icon: '❓', color: '#fff' };
 

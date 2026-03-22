@@ -155,13 +155,16 @@ function gainExp(amt, x, y) {
   if (hasRelic('relic_wisdom')) total += 5;
   player.exp = (player.exp || 0) + total;
   spawnFloat('+' + total + ' EXP', x || cvW / 2, y || cvH * 0.5, 'var(--gold)');
-  document.getElementById('exp-disp').textContent = player.exp;
+  
+  const expDisp = document.getElementById('exp-disp');
+  if (expDisp) expDisp.textContent = player.exp;
+
   while (player.exp >= (player.expNext || 100)) {
-    player.exp -= player.expNext;
+    player.exp -= (player.expNext || 100);
     player.lv++;
     player.expNext = Math.round(100 * Math.pow(1.15, player.lv - 1));
-    player.baseAtk += 2;
-    player.baseDef += 1;
+    player.baseAtk = (player.baseAtk || 10) + 2;
+    player.baseDef = (player.baseDef || 5) + 1;
     const mhp = getMaxHp();
     player.maxHp = mhp;
     if (hasRelic('relic_scroll')) player.hp = mhp;
@@ -219,7 +222,7 @@ function newGame() {
   
   document.getElementById('dead-ov').classList.remove('show');
   currentEnemy = null;
-  Dungeon.isBoss = false;
+  if (typeof Dungeon !== 'undefined') Dungeon.isBossWave = false;
   
   updateStatusPanel();
   updateEnemyHud();
@@ -315,6 +318,8 @@ function updateStatusPanel() {
   
   const plv = document.getElementById('plv');
   if (plv) plv.textContent = player.lv || 1;
+  const plvDisp = document.getElementById('plv-disp');
+  if (plvDisp) plvDisp.textContent = player.lv || 1;
   
   const patk = document.getElementById('patk');
   if (patk) patk.textContent = getAtk();
@@ -329,8 +334,16 @@ function updateStatusPanel() {
     else pc.textContent = '';
   }
 
+  // 經驗值顯示 (dqpf 進度條)
   const expDisp = document.getElementById('exp-disp');
   if (expDisp) expDisp.textContent = player.exp || 0;
+  
+  const dqpf = document.getElementById('dqpf');
+  if (dqpf) {
+    const expNext = player.expNext || 100;
+    const expPct = clamp((player.exp || 0) / expNext * 100, 0, 100);
+    dqpf.style.width = expPct + '%';
+  }
 
   const cd = document.getElementById('combo-disp');
   if (cd) {
@@ -498,16 +511,19 @@ function updateEnemyHud() {
 }
 
 function updateDungeonBar() {
-  const fl = player.floor || 1;
-  const chip = document.getElementById('floor-chip');
-  if (chip) chip.textContent = 'B' + fl + 'F';
-  
-  const disp = document.getElementById('floor-disp');
-  if (disp) disp.textContent = '第 ' + fl + ' 層';
-  
-  const trk = document.getElementById('floor-trk');
-  if (trk) trk.style.width = ((fl % 10) / 10 * 100) + '%';
-  
-  const bw = document.getElementById('boss-warn-txt');
-  if (bw) bw.style.display = fl % 10 === 0 ? 'inline' : 'none';
+  if (typeof Dungeon !== 'undefined' && Dungeon.active) {
+    const fl = Dungeon.wave || 1;
+    const chip = document.getElementById('floor-chip');
+    if (chip) chip.textContent = 'WAVE ' + fl;
+    
+    const trk = document.getElementById('floor-trk');
+    if (trk) trk.style.width = (((fl - 1) % 10) + 1) / 10 * 100 + '%';
+  } else {
+    const fl = player.floor || 1;
+    const chip = document.getElementById('floor-chip');
+    if (chip) chip.textContent = 'B' + fl + 'F';
+    
+    const trk = document.getElementById('floor-trk');
+    if (trk) trk.style.width = ((fl % 10) / 10 * 100) + '%';
+  }
 }
