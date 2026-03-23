@@ -1,65 +1,45 @@
 // ══════════════════════════════════════════════
 // PLAYER STATS
 // ══════════════════════════════════════════════
-function getAtk() {
-  let a = player.baseAtk || 10;
-  if (player.equip && player.equip.weapon && ITEMS[player.equip.weapon]) {
-    const w = ITEMS[player.equip.weapon];
-    if (w.effect && w.effect.atk) a += w.effect.atk;
-  }
-  if (hasRelic('relic_crown') && player.hp < getMaxHp() * 0.3) a = Math.round(a * 1.5);
-  return Math.max(1, a);
-}
 
-function getDef() {
-  let d = player.baseDef || 5;
-  if (player.equip && player.equip.armor && ITEMS[player.equip.armor]) {
-    const ar = ITEMS[player.equip.armor];
-    if (ar.effect && ar.effect.def) d += ar.effect.def;
+
+
+function getPlayerClass() {
+  // 獲取所有職業並依等級排序，預設等級為 1
+  const sortedClasses = Object.values(CLASSES).sort((a, b) => (a.lv || 1) - (b.lv || 1));
+  let c = sortedClasses[0]; // 預設為最低等級職業
+
+  for (const ci of sortedClasses) {
+    if (player.lv >= (ci.lv || 1)) c = ci;
   }
-  return Math.max(1, d);
+  return c;
 }
 
 function getMaxHp() {
-  let h = 100 + ((player.lv || 1) - 1) * 15;
-  if (player.equip && player.equip.armor && ITEMS[player.equip.armor]) {
-    const ar = ITEMS[player.equip.armor];
-    if (ar.effect && ar.effect.maxHp) h += ar.effect.maxHp;
-  }
-  if (player._bonusMaxHp) h += player._bonusMaxHp;
-  return Math.max(1, h);
+  const cls = getPlayerClass();
+  return (cls.baseHp || 100) + (player.lv - 1) * 20;
 }
 
 function getMaxMp() {
-  let m = 50 + ((player.lv || 1) - 1) * 3;
-  if (player.equip && player.equip.armor && ITEMS[player.equip.armor]) {
-    const ar = ITEMS[player.equip.armor];
-    if (ar.effect && ar.effect.maxMp) m += ar.effect.maxMp;
-  }
-  if (player._bonusMaxMp) m += player._bonusMaxMp;
-  return Math.max(1, m);
+  const cls = getPlayerClass();
+  return (cls.baseMp || 50) + (player.lv - 1) * 5;
+}
+
+function getAtk() {
+  const cls = getPlayerClass();
+  let atk = (player.baseAtk || cls.baseAtk || 10);
+  // 這裡可以加入其他加成邏輯
+  return atk;
+}
+
+function getDef() {
+  const cls = getPlayerClass();
+  let def = (player.baseDef || cls.baseDef || 5);
+  return def;
 }
 
 function getCrit() {
-  let c = player.critRate || 0.05;
-  if (player.equip && player.equip.weapon && ITEMS[player.equip.weapon]) {
-    const w = ITEMS[player.equip.weapon];
-    if (w.effect && w.effect.crit) c += w.effect.crit;
-  }
-  if (hasRelic('relic_star')) c += 0.15;
-  return Math.min(c, 0.5);
-}
-
-function hasRelic(id) {
-  return player.relics && player.relics.includes(id);
-}
-
-function getPlayerClass() {
-  let c = CLASSES[0];
-  for (const ci of CLASSES) {
-    if (player.lv >= ci.lv) c = ci;
-  }
-  return c;
+  return 0.05 + (player.combo || 0) * 0.01;
 }
 
 // ══════════════════════════════════════════════
@@ -70,19 +50,7 @@ function calculateDamage(isGrammar = false, isBoss = false) {
   const eDef = currentEnemy ? currentEnemy.def : 0;
   let dmg = Math.max(1, atk - Math.floor(eDef * 0.5));
   if (isGrammar) {
-    if (player.equip && player.equip.weapon && ITEMS[player.equip.weapon]) {
-      const w = ITEMS[player.equip.weapon];
-      if (w.effect && w.effect.grammarBonus) dmg = Math.round(dmg * (1 + w.effect.grammarBonus));
-    }
     dmg += Math.floor((gStats.correct || 0) / 10) * 2;
-    // MP attack bonus (spell_tome)
-    if (player.equip && player.equip.weapon && ITEMS[player.equip.weapon]) {
-      const wpn = ITEMS[player.equip.weapon];
-      if (wpn.effect && wpn.effect.mpAtk && player.mp >= wpn.effect.mpAtk) {
-        dmg += Math.round(dmg * 0.5);
-        player.mp = Math.max(0, player.mp - wpn.effect.mpAtk);
-      }
-    }
   }
   dmg += Math.floor((vStats.correct || 0) / 10);
   if (player.combo >= 5) dmg = Math.round(dmg * 1.3);
@@ -91,72 +59,22 @@ function calculateDamage(isGrammar = false, isBoss = false) {
     dmg = Math.round(dmg * 1.8);
     isCrit = true;
   }
-  if (isBoss && hasRelic('relic_dragon')) dmg = Math.round(dmg * 1.3);
   return { dmg: Math.max(1, dmg), isCrit };
 }
 
 function calcEnemyDmg() {
   if (!currentEnemy) return 0;
   let d = Math.max(1, currentEnemy.atk - Math.floor(getDef() * 0.6));
-  if (player.equip && player.equip.armor && ITEMS[player.equip.armor]) {
-    const ar = ITEMS[player.equip.armor];
-    if (ar.effect && ar.effect.dmgReduce) d = Math.round(d * (1 - ar.effect.dmgReduce));
-  }
+
   return Math.max(1, d);
-}
-
-// ══════════════════════════════════════════════
-// HP / MP / EXP
-// ══════════════════════════════════════════════
-function healPlayer(amt) {
-  player.hp = clamp((player.hp || 0) + amt, 0, getMaxHp());
-  updateStatusPanel();
-  spawnFloat('+' + amt + ' HP', cvW * 0.2, cvH * 0.5, '#60e080');
-}
-
-function healMp(amt) {
-  player.mp = clamp((player.mp || 0) + amt, 0, getMaxMp());
-  updateStatusPanel();
-}
-
-function damagePlayer(raw) {
-  // 優先檢查魔力護盾
-  if (activeMagic.shield) {
-    activeMagic.shield = false;
-    toast('🛡️ 護盾抵消了傷害！');
-    dLog('🛡️ 【語法護盾】破碎！抵消了怪物的攻擊。', 'log-blue');
-    return;
-  }
-
-  if (player.protectedByPhoenix) {
-    player.protectedByPhoenix = false;
-    dLog('🪶 鳳凰羽毛發動！免疫一次傷害', 'log-gold');
-    return;
-  }
-  if (hasRelic('relic_thorns') && currentEnemy) {
-    const ref = Math.round(raw * 0.3);
-    currentEnemy.hp = Math.max(0, currentEnemy.hp - ref);
-    updateEnemyHud();
-    dLog(`🌵 荊棘反射 ${ref} 傷害！`, 'log-gold');
-    // 反射傷害也顯示一下
-    spawnFloat('-' + ref, cvW * 0.75, cvH * 0.4, 'var(--orange)');
-  }
-  player.hp = clamp((player.hp || 0) - raw, 0, getMaxHp());
-  updateStatusPanel();
-  triggerHitEffect('player');
-  sfxHit();
-  // 玩家扣血文字：顯示在左側玩家上方
-  spawnFloat('-' + raw, cvW * 0.2, cvH * 0.4, '#ff4040');
-  if (player.hp <= 0) triggerDeath();
 }
 
 function gainExp(amt, x, y) {
   let total = amt;
-  if (hasRelic('relic_wisdom')) total += 5;
   player.exp = (player.exp || 0) + total;
-  spawnFloat('+' + total + ' EXP', x || cvW / 2, y || cvH * 0.5, 'var(--gold)');
+  spawnFloat("+" + total + " EXP", x || cvW / 2, y || cvH * 0.5, "var(--gold)");
   
-  const expDisp = document.getElementById('exp-disp');
+  const expDisp = document.getElementById("exp-disp");
   if (expDisp) expDisp.textContent = player.exp;
 
   while (player.exp >= (player.expNext || 100)) {
@@ -167,37 +85,13 @@ function gainExp(amt, x, y) {
     player.baseDef = (player.baseDef || 5) + 1;
     const mhp = getMaxHp();
     player.maxHp = mhp;
-    if (hasRelic('relic_scroll')) player.hp = mhp;
-    else player.hp = Math.min((player.hp || 0) + 30, mhp);
-    player.maxMp = getMaxMp();
-    dLog(`⭐ LEVEL UP! Lv.${player.lv} — ${getPlayerClass().name}`, 'log-gold');
+    player.hp = Math.min((player.hp || 0) + 30, mhp);
+    dLog(`⭐ LEVEL UP! Lv.${player.lv} — ${getPlayerClass().name}`, "log-gold");
     sfxLevelUp();
     setTimeout(() => showLU(player.lv), 400);
   }
   updateStatusPanel();
   saveAll();
-}
-
-function triggerDeath() {
-  // Check revive item
-  const ri = player.inventory.findIndex(i => i.id === 'revive');
-  if (ri >= 0) {
-    // 檢查復活水晶是否有數量
-    if (player.inventory[ri].qty > 0) {
-      player.inventory[ri].qty--;
-      if (player.inventory[ri].qty <= 0) player.inventory.splice(ri, 1);
-      player.hp = Math.round(getMaxHp() * 0.5);
-      dLog('🔮 復活水晶自動發動！', 'log-gold');
-      toast('🔮 復活水晶發動！');
-      updateStatusPanel();
-      saveAll();
-      return;
-    }
-  }
-  sfxDead();
-  document.getElementById('dead-floor').textContent = `到達第 ${player.floor} 層 — 最深：${player.totalFloors} 層`;
-  document.getElementById('dead-ov').classList.add('show');
-  dqAnswered = true;
 }
 
 function revive() {
@@ -207,14 +101,6 @@ function revive() {
 }
 
 function newGame() {
-  // 不再重置整個 player 對象，而是只重置血量和進度
-  player.hp = getMaxHp();
-  player.mp = getMaxMp();
-  
-  // 死亡懲罰：回到當前 10 層的開頭（例如 15 層死掉回到 11 層）
-  const currentFloor = player.floor || 1;
-  player.floor = Math.max(1, Math.floor((currentFloor - 1) / 10) * 10 + 1);
-  
   player.combo = 0;
   player.wrongStreak = 0;
   
@@ -227,8 +113,6 @@ function newGame() {
   updateStatusPanel();
   updateEnemyHud();
   updateDungeonBar();
-  renderInventory();
-  dqshow('dq-start');
   toast('⚔️ 重整旗鼓，再次出發！');
 }
 
@@ -286,29 +170,6 @@ function spawnFloat(text, x, y, color = 'var(--gold)') {
 // STATUS PANEL UPDATE
 // ══════════════════════════════════════════════
 function updateStatusPanel() {
-  const mhp = getMaxHp(), mmp = getMaxMp();
-  player.maxHp = mhp;
-  player.maxMp = mmp;
-  
-  const hpPct = clamp((player.hp || 0) / mhp * 100, 0, 100);
-  const mpPct = clamp((player.mp || 0) / mmp * 100, 0, 100);
-  
-  const hpBar = document.getElementById('php-bar');
-  if (hpBar) {
-    hpBar.style.width = hpPct + '%';
-    if (hpPct < 30) hpBar.classList.add('low');
-    else hpBar.classList.remove('low');
-  }
-  
-  const hpVal = document.getElementById('php-val');
-  if (hpVal) hpVal.textContent = (player.hp || 0) + '/' + mhp;
-  
-  const mpBar = document.getElementById('pmp-bar');
-  if (mpBar) mpBar.style.width = mpPct + '%';
-  
-  const mpVal = document.getElementById('pmp-val');
-  if (mpVal) mpVal.textContent = (player.mp || 0) + '/' + mmp;
-
   const cls = getPlayerClass();
   const phudName = document.getElementById('phud-name');
   if (phudName) phudName.textContent = '冒險者';
@@ -320,12 +181,6 @@ function updateStatusPanel() {
   if (plv) plv.textContent = player.lv || 1;
   const plvDisp = document.getElementById('plv-disp');
   if (plvDisp) plvDisp.textContent = player.lv || 1;
-  
-  const patk = document.getElementById('patk');
-  if (patk) patk.textContent = getAtk();
-  
-  const pdef = document.getElementById('pdef');
-  if (pdef) pdef.textContent = getDef();
 
   const combo = player.combo || 0;
   const pc = document.getElementById('pcombo');
@@ -350,9 +205,6 @@ function updateStatusPanel() {
     if (combo >= 3) cd.innerHTML = `<span style="color:var(--gold);font-weight:700">🔥${combo}連勝</span>`;
     else cd.innerHTML = '';
   }
-  // MP skill button
-  const mpBtn = document.getElementById('mp-skill-btn');
-  if (mpBtn) mpBtn.style.display = (player.mp || 0) >= 20 ? 'inline-flex' : 'none';
   
   // 更新角色資訊面板
   updateCharInfo();
@@ -362,10 +214,6 @@ function updateCharInfo() {
   // 更新角色資訊面板的數據
   const lv = player.lv || 1;
   const exp = player.exp || 0;
-  const atk = getAtk();
-  const def = getDef();
-  const maxhp = getMaxHp();
-  const maxmp = getMaxMp();
   
   // 更新基本屬性
   const charLv = document.getElementById('char-lv');
@@ -373,18 +221,6 @@ function updateCharInfo() {
   
   const charExp = document.getElementById('char-exp');
   if (charExp) charExp.textContent = exp;
-  
-  const charAtk = document.getElementById('char-atk');
-  if (charAtk) charAtk.textContent = atk;
-  
-  const charDef = document.getElementById('char-def');
-  if (charDef) charDef.textContent = def;
-  
-  const charMaxHp = document.getElementById('char-maxhp');
-  if (charMaxHp) charMaxHp.textContent = maxhp;
-  
-  const charMaxMp = document.getElementById('char-maxmp');
-  if (charMaxMp) charMaxMp.textContent = maxmp;
   
   // 更新進度數據
   const charFloor = document.getElementById('char-floor');
@@ -401,12 +237,7 @@ function updateCharInfo() {
   
   const charBossKills = document.getElementById('char-boss-kills');
   if (charBossKills) charBossKills.textContent = player.stats?.bossKills || 0;
-  
-  const charRelics = document.getElementById('char-relics');
-  if (charRelics) charRelics.textContent = (player.relics || []).length;
-  
-  // 更新裝備顯示
-  updateCharEquip();
+
 }
 
 // 分頁切換功能
@@ -420,63 +251,6 @@ function switchCharTab(tabName) {
   document.getElementById(`char-${tabName}-panel`).classList.remove('hidden');
 }
 
-function updateCharEquip() {
-  // 更新角色資訊面板中的裝備顯示
-  const weaponSlot = document.getElementById('char-weapon');
-  const armorSlot = document.getElementById('char-armor');
-  
-  if (weaponSlot) {
-    const weaponId = player.equip.weapon;
-    if (weaponId && ITEMS[weaponId] !== undefined) {
-      const item = ITEMS[weaponId];
-      weaponSlot.innerHTML = `<span style="font-size:18px">${item.icon}</span> ${item.name}`;
-      weaponSlot.style.color = 'var(--gold)';
-    } else {
-      weaponSlot.textContent = '未裝備';
-      weaponSlot.style.color = 'var(--text2)';
-    }
-  }
-  
-  if (armorSlot) {
-    const armorId = player.equip.armor;
-    if (armorId && ITEMS[armorId] !== undefined) {
-      const item = ITEMS[armorId];
-      armorSlot.innerHTML = `<span style="font-size:18px">${item.icon}</span> ${item.name}`;
-      armorSlot.style.color = 'var(--gold)';
-    } else {
-      armorSlot.textContent = '未裝備';
-      armorSlot.style.color = 'var(--text2)';
-    }
-  }
-}
-
-function updateEquippedDisplay() {
-  // 顯示已裝備的武器
-  const weaponSlot = document.getElementById('equipped-weapon');
-  if (weaponSlot) {
-    const weaponId = player.equip.weapon;
-    if (weaponId && ITEMS[weaponId]) {
-      const item = ITEMS[weaponId];
-      weaponSlot.innerHTML = `<span class="eq-icon">${item.icon}</span><span class="eq-name">${item.name}</span>`;
-      weaponSlot.style.display = 'flex';
-    } else {
-      weaponSlot.style.display = 'none';
-    }
-  }
-  
-  // 顯示已裝備的護甲
-  const armorSlot = document.getElementById('equipped-armor');
-  if (armorSlot) {
-    const armorId = player.equip.armor;
-    if (armorId && ITEMS[armorId]) {
-      const item = ITEMS[armorId];
-      armorSlot.innerHTML = `<span class="eq-icon">${item.icon}</span><span class="eq-name">${item.name}</span>`;
-      armorSlot.style.display = 'flex';
-    } else {
-      armorSlot.style.display = 'none';
-    }
-  }
-}
 
 function updateEnemyHud() {
   const ehudName = document.getElementById("ehud-name");

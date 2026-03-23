@@ -82,8 +82,12 @@ function scaleEnemy(base, wave) {
   e.maxHp = e.hp;
   e.atk = Math.round((e.baseAtk || 6) * (1 + (wave - 1) * 0.1));
   e.speed = (base.speed || 0.5) * (1 + (wave - 1) * 0.02);
-  e.x = cvW || 600; // 從右側出現
-  e.targetX = 80; // 目標是左側主堡
+  
+  // 怪物從右側建築物內部 (與封面樣式對齊)
+  // 使用邏輯座標 (0-120)，樣式中怪物產點約在 c=105
+  e.x = 105; 
+  
+  e.targetX = 30; // 目標是左側建築物門口
   return e;
 }
 
@@ -193,14 +197,15 @@ function nextQItem() {
 }
 
 function startDungeon() {
+  dLog(`[Dungeon] startDungeon 啟動`, "log-info");
   buildPools();
   if (gQuestions.length === 0) {
-    dLog('⏳ 正在載入題庫，請稍候...', 'log-info');
+    dLog("⏳ 正在載入題庫，請稍候...", "log-info");
     setTimeout(startDungeon, 500);
     return;
   }
   if (gPool.length < 2) {
-    alert('題目不足（至少需要 2 題），請先新增題目！');
+    alert("題目不足（至少需要 2 題），請先新增題目！");
     return;
   }
   Dungeon.active = true;
@@ -208,6 +213,10 @@ function startDungeon() {
   Dungeon.gold = 200;
   Dungeon.castleHp = 200;
   Dungeon.maxCastleHp = 200;
+  
+  // 初始化士兵與敵人陣列，確保它們是空且可操作的
+  Dungeon.soldiers = [];
+  Dungeon.enemies = [];
   Dungeon.soldiers = [];
   Dungeon.enemies = [];
   Dungeon.correctCount = 0;
@@ -215,6 +224,7 @@ function startDungeon() {
   dQTot = 0;
   dQC = 0;
   dQW = 0;
+  dLog(`[Dungeon] Dungeon.active: ${Dungeon.active}, castleHp: ${Dungeon.castleHp}`, "log-info");
   beginBattle();
 }
 
@@ -298,6 +308,11 @@ function summonSoldier(type) {
   const bonusAtk = (up.atk || 0) * 5;
   const bonusHp = (up.hp || 0) * 20;
   const bonusElem = (up.elem || 0) * 0.05;
+  
+  // 士兵從左側建築物門口 (與封面樣式對齊)
+  // 使用邏輯座標 (0-120)，門口位置 c=15
+  const spawnX = 15;
+
   const s = {
     ...spec,
     id: type,
@@ -305,8 +320,8 @@ function summonSoldier(type) {
     maxHp: spec.hp + bonusHp,
     atk: spec.atk + bonusAtk,
     elem_strength: (spec.elem_strength || 1.0) + bonusElem,
-    x: 75,
-    targetX: cvW - 100,
+    x: spawnX,
+    targetX: 75, // 目標是畫面中央 (c=75 附近)
     state: "move",
     atkTimer: 0,
     element: spec.element
@@ -407,6 +422,9 @@ function selDQ(btn, type, sel, cor, evt) {
       player.stats.typeStats[q.type].c++;
     }
     if (typeof gainExp === 'function') gainExp(10);
+    // 答對後顯示繼續按鈕
+    const nxt = document.getElementById('dqnxt');
+    if (nxt) nxt.style.display = 'block';
   } else {
     dQW++;
     player.combo = 0;
