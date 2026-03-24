@@ -425,20 +425,19 @@ let animFrame = null;
 
 function drawCastleHpBar(x, y, px) {
   const pct = (Dungeon.castleHp || 0) / (Dungeon.maxCastleHp || 100);
-  const w = px * 30;
-  const h = px * 2;
+  // 縮短寬度，從 30*px 降至 15*px，使其更貼合單個塔樓的寬度
+  const w = px * 20; // 再次調整寬度，使其更貼近邊緣
+  const h = px * 1.5; // 維持較短高度
   
-  ctx2.fillStyle = 'rgba(0,0,0,0.7)';
+  // 背景/邊框
+  ctx2.fillStyle = 'rgba(0,0,0,0.8)';
   ctx2.fillRect(x - w/2, y, w, h);
   
+  // 血量條
   const barColor = pct > 0.6 ? '#4cbc4c' : (pct > 0.3 ? '#eab830' : '#f03040');
   ctx2.fillStyle = barColor;
-  ctx2.fillRect(x - w/2 + 1, y + 1, (w - 2) * pct, h - 2);
-  
-  // 移除描邊，改用 fillRect 畫邊框或直接不畫，避免黑線
-  // ctx2.strokeStyle = '#f1c40f';
-  // ctx2.lineWidth = 1;
-  // ctx2.strokeRect(x - w/2, y, w, h);
+  const fillW = Math.max(0, (w - 2) * pct);
+  ctx2.fillRect(x - w + 15, y + 1, fillW, h - 2);
 }
 
 function renderBattleCanvas() {
@@ -496,8 +495,9 @@ function renderBattleCanvas() {
   if (typeof Dungeon !== "undefined" && Dungeon.active) {
     // 戰鬥畫面：渲染單位
     
-    // 繪製城堡血條 (位於左側城堡塔樓上方)
-    drawCastleHpBar(startX + 10 * px, startY + 5 * px, px);
+    // 繪製城堡血條 (精確定位在左側城堡塔樓的正上方)
+    // 根據 ETYMOLOGY_LEGENDS_TITLE 的像素定義，左側主塔約在 x=10 附近
+    drawCastleHpBar(startX + 17.5 * px, startY + 6 * px, px); // 將血條位置調整為更低，並向右微調以適應新寬度
 
     // 渲染士兵
     Dungeon.soldiers.forEach(s => {
@@ -505,8 +505,15 @@ function renderBattleCanvas() {
       const sRows = sprite.pixels.length;
       const pxS = (H / 5) / sRows; // 基礎大小佔畫面 1/5 高度
       const sH = sRows * pxS;
+      
       // 將邏輯座標 (0-120) 轉換為實際畫布像素座標
-      const drawX = startX + s.x * px; 
+      let drawX = startX + s.x * px; 
+      
+      // 視覺補償：閒置時增加微小擺動（僅限渲染偏移，不影響邏輯座標）
+      if (s.state === "idle") {
+        drawX += Math.sin(s.idleTimer || 0) * 1.5; 
+      }
+
       drawPixelChar(sprite, drawX, currentGY - sH, pxS, false, s.element);
       drawUnitHp(drawX, currentGY - sH - 4 * px, s.hp, s.maxHp, "#4cbc4c");
     });
@@ -690,11 +697,20 @@ function updateBattleLogic() {
       }
     } else {
       s.state = "move";
-      // 士兵原地待命邏輯：如果前方無敵人，且已經走過畫面 3/4 (約 90 邏輯像素)，則停止移動
-      if (s.x < logicalW * 0.5) {
+      // 士兵原地待命邏輯：根據 range 決定待命位置，加大偏移量
+      const baseIdleX = logicalW * 0.45;
+      // 加大偏移：近戰(range=30)在 54, 遠程(range=150)在 54 - (120/2) = -6 (會被限制在 20)
+      const rangeOffset = Math.max(0, (s.range - 30) * 0.5); 
+      const targetIdleX = Math.max(12, baseIdleX - rangeOffset);
+
+      if (s.x < targetIdleX - 2) { // 稍微留一點緩衝區
         s.x += s.speed;
+      } else if (s.x > targetIdleX + 2) {
+        s.x -= s.speed;
       } else {
         s.state = "idle";
+        s.x = targetIdleX; // 鎖定邏輯座標，避免漂移
+        s.idleTimer = (s.idleTimer || 0) + 0.03; // 僅更新計時器
       }
     }
   });
@@ -728,7 +744,7 @@ function updateBattleLogic() {
         triggerHitEffect("player", drawX);
         e.atkTimer = 0;
       }
-    } else if (e.x > 15) { // 城堡門口在邏輯座標 15
+    } else if (e.x > 10) { // 城堡門口微調為邏輯座標 10，確保視覺與邏輯平衡
       e.x -= e.speed;
     } else {
       // 撞擊主堡
@@ -739,7 +755,7 @@ function updateBattleLogic() {
       const currentPx = Math.min(currentW / 120, currentH / currentSpec.pixels.length);
       const currentStartX = (currentW - 120 * currentPx) / 2;
 
-      spawnFloat(`-${Math.round(e.atk*2)}`, currentStartX + 15 * currentPx, currentH * 0.5, "#f00"); // 城堡門口的渲染座標
+      spawnFloat(`-${Math.round(e.atk*2)}`, currentStartX + 10 * currentPx, currentH * 0.5, "#f00"); // 修正城堡門口的渲染座標
       e.hp = 0; 
       updateBattleUI();
       if (Dungeon.castleHp <= 0) endGame();

@@ -65,7 +65,6 @@ function defPlayer() {
 // ══════════════════════════════════════════════
 function onStorageReady() {
   // 題庫載入完成後初始化遊戲
-  dLog("[Scripts] Storage ready, initializing game...");
   
   renderBattleCanvas();
   updHeader();
@@ -74,8 +73,6 @@ function onStorageReady() {
   updateDungeonBar();
   updateEnemyHud();
   updateCharInfo();
-  dLog(`[Scripts] onStorageReady: Dungeon.active=${Dungeon.active}`);
-  
   
   // MP cooldown
   setInterval(() => {

@@ -36,41 +36,41 @@ const ELEMENTS = {
 // Tier 4: Cost 750, HP 850, ATK 150, Range 60/300
 const UNIT_TYPES = {
   // --- Earth (地屬性) ---
-  warrior:     { name: '戰士', cost: 100, hp: 100, atk: 20, speed: 0.8, sprite: 'player', range: 30, element: 'Earth', elem_strength: 1.0 },
-  rock_thrower:{ name: '投石者', cost: 250, hp: 150, atk: 40, speed: 0.6, sprite: 'skeleton', range: 180, element: 'Earth', elem_strength: 1.0 },
-  paladin:     { name: '聖騎士', cost: 450, hp: 500, atk: 70, speed: 0.7, sprite: 'paladin', range: 40, element: 'Earth', elem_strength: 1.0 },
-  hero:        { name: '大地英雄', cost: 750, hp: 1000, atk: 150, speed: 0.9, sprite: 'hero', range: 50, element: 'Earth', elem_strength: 1.0 },
+  warrior:     { name: '戰士', cost: 100, hp: 100, atk: 20, speed: 0.15, sprite: 'player', range: 10, element: 'Earth', elem_strength: 1.0 },
+  rock_thrower:{ name: '投石者', cost: 250, hp: 150, atk: 40, speed: 0.1, sprite: 'skeleton', range: 25, element: 'Earth', elem_strength: 1.0 },
+  paladin:     { name: '聖騎士', cost: 450, hp: 500, atk: 70, speed: 0.15, sprite: 'paladin', range: 13, element: 'Earth', elem_strength: 1.0 },
+  hero:        { name: '大地英雄', cost: 750, hp: 1000, atk: 150, speed: 0.2, sprite: 'hero', range: 18, element: 'Earth', elem_strength: 1.0 },
 
   // --- Water (水屬性) ---
-  archer:      { name: '弓箭手', cost: 100, hp: 70, atk: 15, speed: 0.6, sprite: 'archer', range: 200, element: 'Water', elem_strength: 1.0 },
-  assassin:    { name: '刺客', cost: 250, hp: 150, atk: 60, speed: 1.6, sprite: 'assassin', range: 25, element: 'Water', elem_strength: 1.0 },
-  ghost:       { name: '幽靈刺客', cost: 450, hp: 350, atk: 90, speed: 1.4, sprite: 'ghost', range: 30, element: 'Water', elem_strength: 1.0 },
-  cleric:      { name: '大主祭', cost: 750, hp: 600, atk: 120, speed: 0.7, sprite: 'cleric', range: 250, element: 'Water', elem_strength: 1.0 },
+  archer:      { name: '弓箭手', cost: 100, hp: 70, atk: 15, speed: 0.1, sprite: 'archer', range: 23, element: 'Water', elem_strength: 1.0 },
+  assassin:    { name: '刺客', cost: 250, hp: 150, atk: 60, speed: 0.25, sprite: 'assassin', range: 12, element: 'Water', elem_strength: 1.0 },
+  ghost:       { name: '幽靈刺客', cost: 450, hp: 350, atk: 90, speed: 0.25, sprite: 'ghost', range: 15, element: 'Water', elem_strength: 1.0 },
+  cleric:      { name: '大主祭', cost: 750, hp: 600, atk: 120, speed: 0.1, sprite: 'cleric', range: 25, element: 'Water', elem_strength: 1.0 },
 
   // --- Fire (火屬性) ---
-  mage:        { name: '魔法師', cost: 100, hp: 60, atk: 25, speed: 0.5, sprite: 'mage', range: 150, element: 'Fire', elem_strength: 1.0 },
-  reaper:      { name: '死神', cost: 250, hp: 200, atk: 55, speed: 1.0, sprite: 'reaper', range: 40, element: 'Fire', elem_strength: 1.0 },
-  knight:      { name: '烈焰騎士', cost: 450, hp: 450, atk: 85, speed: 0.9, sprite: 'boss', range: 50, element: 'Fire', elem_strength: 1.0 },
-  dragonlord:  { name: '龍領主', cost: 750, hp: 900, atk: 180, speed: 1.0, sprite: 'dragon', range: 60, element: 'Fire', elem_strength: 1.0 }
+  mage:        { name: '魔法師', cost: 100, hp: 60, atk: 25, speed: 0.1, sprite: 'mage', range: 25, element: 'Fire', elem_strength: 1.0 },
+  reaper:      { name: '死神', cost: 250, hp: 200, atk: 55, speed: 0.2, sprite: 'reaper', range: 10, element: 'Fire', elem_strength: 1.0 },
+  knight:      { name: '烈焰騎士', cost: 450, hp: 450, atk: 85, speed: 0.2, sprite: 'boss', range: 13, element: 'Fire', elem_strength: 1.0 },
+  dragonlord:  { name: '龍領主', cost: 750, hp: 900, atk: 180, speed: 0.2, sprite: 'dragon', range: 18, element: 'Fire', elem_strength: 1.0 }
 };
 
 // 敵人單位類型定義（使用 canvas.js 中現有但未被士兵使用的 sprite）
 const BOSS_SPECS = {
-  demon_lord: { name: '惡魔領主', baseHp: 500, baseAtk: 40, speed: 0.4, sprite: 'demon', scaleFactor: 2.0 },
+  demon_lord: { name: '惡魔領主', baseHp: 500, baseAtk: 40, speed: 0.25, sprite: 'demon', scaleFactor: 2.0 },
   dragon_king: { name: '龍王', baseHp: 800, baseAtk: 60, speed: 0.3, sprite: 'dragon', scaleFactor: 2.5 }
 };
 
 const ENEMY_SPECS = {
-  slime:     { name: '史萊姆', baseHp: 40, baseAtk: 6, speed: 0.5, sprite: 'slime' },
-  skeleton:  { name: '骷髏兵', baseHp: 50, baseAtk: 8, speed: 0.6, sprite: 'skeleton' },
-  ghost:     { name: '幽靈', baseHp: 30, baseAtk: 10, speed: 0.8, sprite: 'ghost' },
-  spider:    { name: '蜘蛛', baseHp: 45, baseAtk: 7, speed: 0.7, sprite: 'spider' },
-  demon:     { name: '惡魔', baseHp: 70, baseAtk: 12, speed: 0.6, sprite: 'demon' },
-  dragon:    { name: '幼龍', baseHp: 100, baseAtk: 15, speed: 0.5, sprite: 'dragon' },
-  wyvern:    { name: '飛龍', baseHp: 100, baseAtk: 15, speed: 0.9, sprite: 'wyvern' },
-  fire_wisp: { name: '火焰精靈', baseHp: 30, baseAtk: 20, speed: 1.1, sprite: 'fire_wisp' },
-  ice_golem: { name: '冰魔像', baseHp: 100, baseAtk: 10, speed: 0.3, sprite: 'ice_golem' },
-  mimic:     { name: '寶箱怪', baseHp: 80, baseAtk: 10, speed: 0.4, sprite: 'mimic' }
+  slime:     { name: '史萊姆', baseHp: 40, baseAtk: 6, speed: 0.15, sprite: 'slime' },
+  skeleton:  { name: '骷髏兵', baseHp: 50, baseAtk: 8, speed: 0.15, sprite: 'skeleton' },
+  ghost:     { name: '幽靈', baseHp: 30, baseAtk: 10, speed: 0.2, sprite: 'ghost' },
+  spider:    { name: '蜘蛛', baseHp: 45, baseAtk: 7, speed: 0.2, sprite: 'spider' },
+  demon:     { name: '惡魔', baseHp: 70, baseAtk: 12, speed: 0.15, sprite: 'demon' },
+  dragon:    { name: '幼龍', baseHp: 100, baseAtk: 15, speed: 0.15, sprite: 'dragon' },
+  wyvern:    { name: '飛龍', baseHp: 100, baseAtk: 15, speed: 0.2, sprite: 'wyvern' },
+  fire_wisp: { name: '火焰精靈', baseHp: 30, baseAtk: 20, speed: 0.2, sprite: 'fire_wisp' },
+  ice_golem: { name: '冰魔像', baseHp: 100, baseAtk: 10, speed: 0.2, sprite: 'ice_golem' },
+  mimic:     { name: '寶箱怪', baseHp: 80, baseAtk: 10, speed: 0.2, sprite: 'mimic' }
 };
 
 // 您可以在此調整怪物的成長係數：
@@ -197,10 +197,8 @@ function nextQItem() {
 }
 
 function startDungeon() {
-  dLog(`[Dungeon] startDungeon 啟動`, "log-info");
   buildPools();
   if (gQuestions.length === 0) {
-    dLog("⏳ 正在載入題庫，請稍候...", "log-info");
     setTimeout(startDungeon, 500);
     return;
   }
@@ -224,7 +222,6 @@ function startDungeon() {
   dQTot = 0;
   dQC = 0;
   dQW = 0;
-  dLog(`[Dungeon] Dungeon.active: ${Dungeon.active}, castleHp: ${Dungeon.castleHp}`, "log-info");
   beginBattle();
 }
 
@@ -310,8 +307,8 @@ function summonSoldier(type) {
   const bonusElem = (up.elem || 0) * 0.05;
   
   // 士兵從左側建築物門口 (與封面樣式對齊)
-  // 使用邏輯座標 (0-120)，門口位置 c=15
-  const spawnX = 15;
+  // 使用邏輯座標 (0-120)，門口位置修正為較左側的 c=8
+  const spawnX = 8;
 
   const s = {
     ...spec,
