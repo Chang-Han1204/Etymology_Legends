@@ -29,40 +29,6 @@ function defPlayer() {
   };
 }
 
-// 這些變數由 storage.js 初始化並設定為全域變數
-// let ITEMS = {};
-// let vWords = [];
-// let gQuestions = [];
-// let vStats = { correct: 0, wrong: 0, ws: {} };
-// let gStats = { correct: 0, wrong: 0, ws: {} };
-// let player = defPlayer(); 
-
-// 確保 player 變數在全局範圍內可用，且能被 storage.js 覆寫。
-// 在 storage.js 載入後，player 會被正確初始化。
-// 如果在此處重新聲明，則會覆蓋 storage.js 載入的數據。
-// 因此，此處只定義一個用於重置的 defPlayer 函數，而不進行初始化。
-// 其他變數也類似處理，確保它們是單例的並且由 storage.js 負責管理。
-
-// 如果需要在 scripts.js 中直接訪問這些變數，確保它們已被 storage.js 正確設置。
-// 或者使用 window.變數名 來明確指向全局變數。
-
-// 不再在此處重新聲明這些變數，以避免覆蓋 storage.js 載入的數據。
-// initStorage 函數負責初始化這些全局變數。
-// 這些變數預期在 window 範圍內被定義。
-
-// 為了確保在 storage.js 載入完成之前，這些變數不會引起錯誤，
-// 可以在此處將其設定為 null 或空物件/陣列，但不要使用 let/const 重新聲明。
-// 例如：
-// window.ITEMS = window.ITEMS || {};
-// window.vWords = window.vWords || [];
-// ...等等
-// 但目前 storage.js 的初始化已經足夠。
-
-
-
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
 function onStorageReady() {
   // 題庫載入完成後初始化遊戲
   
@@ -72,22 +38,6 @@ function onStorageReady() {
   updateStatusPanel();
   updateDungeonBar();
   updateEnemyHud();
-  updateCharInfo();
-  
-  // MP cooldown
-  setInterval(() => {
-    if (player.mpSkillCooldown > 0) player.mpSkillCooldown--;
-    if (player.mpSkillCooldown <= 0) {
-      const btn = document.getElementById('mp-skill-btn');
-      if (btn) btn.style.display = (player.mp || 0) >= 20 ? 'inline-flex' : 'none';
-    }
-  }, 1000);
-  
-  // MP regen
-  setInterval(() => {
-    const ar = player.equip.armor ? ITEMS[player.equip.armor] : null;
-    if (ar?.effect?.mpRegen) healMp(ar.effect.mpRegen);
-  }, 10000);
   
   // Auto save
   setInterval(saveAll, 15000);

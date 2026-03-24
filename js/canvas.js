@@ -426,7 +426,7 @@ let animFrame = null;
 function drawCastleHpBar(x, y, px) {
   const pct = (Dungeon.castleHp || 0) / (Dungeon.maxCastleHp || 100);
   // 縮短寬度，從 30*px 降至 15*px，使其更貼合單個塔樓的寬度
-  const w = px * 20; // 再次調整寬度，使其更貼近邊緣
+  const w = px * 15; // 再次調整寬度，使其更貼近邊緣
   const h = px * 1.5; // 維持較短高度
   
   // 背景/邊框
@@ -437,7 +437,7 @@ function drawCastleHpBar(x, y, px) {
   const barColor = pct > 0.6 ? '#4cbc4c' : (pct > 0.3 ? '#eab830' : '#f03040');
   ctx2.fillStyle = barColor;
   const fillW = Math.max(0, (w - 2) * pct);
-  ctx2.fillRect(x - w + 15, y + 1, fillW, h - 2);
+  ctx2.fillRect(x - w - 12, y - 20, fillW, h - 2);
 }
 
 function renderBattleCanvas() {

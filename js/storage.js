@@ -1,13 +1,13 @@
 // ══════════════════════════════════════════════
 // STORAGE SYSTEM
-// 題庫 (vocab/grammar/items) → fetch 從伺服器載入（唯讀）
+// 題庫 (vocab/grammar) → fetch 從伺服器載入（唯讀）
 // 玩家進度 (player/vstats/gstats) → localStorage
 // ══════════════════════════════════════════════
 
 // ── 全域變數宣告（必須在此處宣告，其他檔案才能存取）──
 var vWords     = [];
 var gQuestions = [];
-var ITEMS      = {};
+// var ITEMS      = {}; // 移除 ITEMS 宣告
 var vStats     = { correct: 0, wrong: 0, ws: {} };
 var gStats     = { correct: 0, wrong: 0, ws: {} };
 var player     = null; // 由 initStorage 初始化
@@ -15,11 +15,11 @@ var player     = null; // 由 initStorage 初始化
 // ── 預設玩家資料 ──
 const DEFAULT_PLAYER = {
   lv: 1, exp: 0, expNext: 100, floor: 1, totalFloors: 1,
-  hp: 100, maxHp: 100, mp: 50, maxMp: 50,
+  hp: 100, maxHp: 100, // 移除 mp, maxMp
   baseAtk: 10, baseDef: 5, critRate: 0.05,
   combo: 0, maxCombo: 0, wrongStreak: 0,
-  inventory: [], equip: { weapon: null, armor: null },
-  relics: [], 
+  // inventory: [], equip: { weapon: null, armor: null }, // 移除 inventory, equip
+  // relics: [], // 移除 relics
   stats: { 
     vocabKills: 0, grammarKills: 0, bossKills: 0,
     totalWaves: 0, totalCorrect: 0, totalWrong: 0,
@@ -27,8 +27,8 @@ const DEFAULT_PLAYER = {
     typeStats: {}, // 按題型統計 { logic_grammar: { c: 0, w: 0 }, ... }
     elementStats: { Water: 0, Fire: 0, Earth: 0 } // 按屬性召喚次數
   },
-  _bonusMaxHp: 0, _bonusMaxMp: 0,
-  protectedByPhoenix: false, mpSkillCooldown: 0,
+  _bonusMaxHp: 0, // 移除 _bonusMaxMp
+  protectedByPhoenix: false, // 移除 mpSkillCooldown
   gems: 0,
   upgrades: {
     // 儲存每個士兵種類的強化等級
@@ -49,7 +49,6 @@ const LS_KEYS = {
 // ── 伺服器靜態檔案路徑 ──
 const FILE_PATHS = {
   grammar: 'data/grammar.csv',
-  items:   'data/items.json',
 };
 
 // ══════════════════════════════════════════════
@@ -177,17 +176,6 @@ async function fetchGrammar() {
   }
 }
 
-async function fetchItems() {
-  try {
-    const res = await fetch(FILE_PATHS.items);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (e) {
-    console.error('[Storage] fetchItems failed, using DEFAULT_ITEMS:', e);
-    return (typeof DEFAULT_ITEMS !== 'undefined') ? DEFAULT_ITEMS : {};
-  }
-}
-
 // ══════════════════════════════════════════════
 // 玩家進度：讀寫 localStorage
 // ══════════════════════════════════════════════
@@ -228,7 +216,7 @@ function saveAll() {
 function ensurePlayerIntegrity() {
   Object.keys(DEFAULT_PLAYER).forEach(key => {
     if (!(key in player) || player[key] === undefined || player[key] === null) {
-      // 跳過 equip 這種物件型態，避免覆蓋
+      // 跳過物件型態，避免覆蓋
       if (typeof DEFAULT_PLAYER[key] === 'object' && !Array.isArray(DEFAULT_PLAYER[key])) {
         if (!player[key]) player[key] = JSON.parse(JSON.stringify(DEFAULT_PLAYER[key]));
       } else if (Array.isArray(DEFAULT_PLAYER[key])) {
@@ -238,12 +226,7 @@ function ensurePlayerIntegrity() {
       }
     }
   });
-  // 確保關鍵欄位存在
-  if (!player.inventory) player.inventory = [];
-  if (!player.equip) player.equip = { weapon: null, armor: null };
-  if (player.equip.weapon === undefined) player.equip.weapon = null;
-  if (player.equip.armor === undefined) player.equip.armor = null;
-  if (!player.relics) player.relics = [];
+
   if (!player.stats) player.stats = { vocabKills: 0, grammarKills: 0, bossKills: 0 };
   // 補齊新統計欄位
   if (player.stats.totalWaves === undefined) player.stats.totalWaves = 0;
@@ -266,20 +249,20 @@ function ensurePlayerIntegrity() {
 async function initStorage() {
   console.log('[Storage] 開始載入...');
 
-  // 平行載入題庫與道具（加速啟動）
-  const [vocabData, grammarData, itemsData] = await Promise.all([
+  // 平行載入題庫（加速啟動）
+  const [vocabData, grammarData] = await Promise.all([
     fetchVocab(),
     fetchGrammar(),
-    fetchItems(),
+    // fetchItems(), // 移除 fetchItems 呼叫
   ]);
 
   vWords     = vocabData;
   gQuestions = grammarData;
-  ITEMS      = itemsData;
+  // ITEMS      = itemsData; // 移除 ITEMS 賦值
 
   console.log(`[Storage] 詞彙庫: ${vWords.length} 筆`);
   console.log(`[Storage] 文法題庫: ${gQuestions.length} 筆`);
-  console.log(`[Storage] 道具: ${Object.keys(ITEMS).length} 種`);
+  // console.log(`[Storage] 道具: ${Object.keys(ITEMS).length} 種`); // 移除道具數量日誌
 
   // 從 localStorage 載入玩家進度
   const savedPlayer = loadPlayerFromLS();
@@ -324,10 +307,8 @@ function exportData(type) {
     data = vWords; title = '匯出單字庫'; fname = 'lexicon2_words.json';
   } else if (type === 'grammar') {
     data = gQuestions; title = '匯出文法題庫'; fname = 'lexicon2_grammar.json';
-  } else if (type === 'items') {
-    data = ITEMS; title = '匯出道具設定'; fname = 'lexicon2_items.json';
-  } else {
-    data = { words: vWords, grammar: gQuestions, vstats: vStats, gstats: gStats, player, items: ITEMS };
+  } else { // 移除 else if (type === 'items')
+    data = { words: vWords, grammar: gQuestions, vstats: vStats, gstats: gStats, player }; // 移除 items: ITEMS
     title = '完整備份'; fname = 'lexicon2_backup.json';
   }
   const exportTtl = document.getElementById('export-ttl');
@@ -349,7 +330,7 @@ function resetData() {
   vStats = { ...DEFAULT_VSTATS };
   gStats = { ...DEFAULT_GSTATS };
   if (typeof updateStatusPanel  === 'function') updateStatusPanel();
-  if (typeof renderInventory    === 'function') renderInventory();
+  // if (typeof renderInventory    === 'function') renderInventory(); // 移除 renderInventory 呼叫
   if (typeof renderDataPanel    === 'function') renderDataPanel();
   if (typeof updateDungeonBar   === 'function') updateDungeonBar();
   if (typeof updateEnemyHud     === 'function') updateEnemyHud();

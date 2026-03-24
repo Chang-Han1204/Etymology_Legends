@@ -226,9 +226,6 @@ function updateCharInfo() {
   const charFloor = document.getElementById('char-floor');
   if (charFloor) charFloor.textContent = player.floor || 1;
   
-  // 注意：HTML 中沒有 char-maxfloor 元素，所以跳過這一行
-  // document.getElementById('char-maxfloor').textContent = player.totalFloors || player.floor || 1;
-  
   const charVocabKills = document.getElementById('char-vocab-kills');
   if (charVocabKills) charVocabKills.textContent = player.stats?.vocabKills || 0;
   
