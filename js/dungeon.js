@@ -5,8 +5,8 @@ const Dungeon = {
   active: false,
   wave: 1,
   gold: 0,
-  castleHp: 100,
-  maxCastleHp: 100,
+  castleHp: 300,
+  maxCastleHp: 300,
   soldiers: [],
   enemies: [],
   correctCount: 0,
@@ -27,37 +27,30 @@ const ELEMENTS = {
   EARTH: { id: 'Earth', name: '地', color: '#a07040', icon: '🌿', counters: 'Water' }
 };
 
-// 單位類型定義
-// cost: 召喚金幣, hp: 生命值, atk: 攻擊力, speed: 移動速度, range: 攻擊距離, element: 屬性
-// 階級平衡：
-// Tier 1: Cost 100, HP 100, ATK 20, Range 30/150
-// Tier 2: Cost 250, HP 200, ATK 45, Range 40/200
-// Tier 3: Cost 450, HP 400, ATK 80, Range 50/250
-// Tier 4: Cost 750, HP 850, ATK 150, Range 60/300
 const UNIT_TYPES = {
   // --- Earth (地屬性) ---
   warrior:     { name: '戰士', cost: 100, hp: 100, atk: 20, speed: 0.15, sprite: 'player', range: 10, element: 'Earth', elem_strength: 1.0 },
-  rock_thrower:{ name: '投石者', cost: 250, hp: 150, atk: 40, speed: 0.1, sprite: 'skeleton', range: 25, element: 'Earth', elem_strength: 1.0 },
-  paladin:     { name: '聖騎士', cost: 450, hp: 500, atk: 70, speed: 0.15, sprite: 'paladin', range: 13, element: 'Earth', elem_strength: 1.0 },
-  hero:        { name: '大地英雄', cost: 750, hp: 1000, atk: 150, speed: 0.2, sprite: 'hero', range: 18, element: 'Earth', elem_strength: 1.0 },
+  rock_thrower:{ name: '投石者', cost: 250, hp: 200, atk: 50, speed: 0.1, sprite: 'skeleton', range: 30, element: 'Earth', elem_strength: 1.0 }, // 提升 HP, ATK, Range
+  paladin:     { name: '聖騎士', cost: 450, hp: 600, atk: 80, speed: 0.15, sprite: 'paladin', range: 15, element: 'Earth', elem_strength: 1.0 }, // 提升 HP, ATK, Range
+  hero:        { name: '大地英雄', cost: 750, hp: 1200, atk: 180, speed: 0.2, sprite: 'hero', range: 20, element: 'Earth', elem_strength: 1.0 }, // 提升 HP, ATK, Range
 
   // --- Water (水屬性) ---
-  archer:      { name: '弓箭手', cost: 100, hp: 70, atk: 15, speed: 0.1, sprite: 'archer', range: 23, element: 'Water', elem_strength: 1.0 },
-  assassin:    { name: '刺客', cost: 250, hp: 150, atk: 60, speed: 0.25, sprite: 'assassin', range: 12, element: 'Water', elem_strength: 1.0 },
-  ghost:       { name: '幽靈刺客', cost: 450, hp: 350, atk: 90, speed: 0.25, sprite: 'ghost', range: 15, element: 'Water', elem_strength: 1.0 },
-  cleric:      { name: '大主祭', cost: 750, hp: 600, atk: 120, speed: 0.1, sprite: 'cleric', range: 25, element: 'Water', elem_strength: 1.0 },
+  archer:      { name: '弓箭手', cost: 100, hp: 70, atk: 18, speed: 0.1, sprite: 'archer', range: 25, element: 'Water', elem_strength: 1.0 }, // 微幅提升 ATK, Range
+  assassin:    { name: '刺客', cost: 250, hp: 180, atk: 70, speed: 0.3, sprite: 'assassin', range: 12, element: 'Water', elem_strength: 1.0 }, // 提升 HP, ATK, Speed
+  ghost:       { name: '幽靈刺客', cost: 450, hp: 400, atk: 100, speed: 0.3, sprite: 'ghost', range: 18, element: 'Water', elem_strength: 1.0 }, // 提升 HP, ATK, Speed, Range
+  cleric:      { name: '大主祭', cost: 750, hp: 700, atk: 140, speed: 0.1, sprite: 'cleric', range: 28, element: 'Water', elem_strength: 1.0 }, // 提升 HP, ATK, Range
 
   // --- Fire (火屬性) ---
-  mage:        { name: '魔法師', cost: 100, hp: 60, atk: 25, speed: 0.1, sprite: 'mage', range: 25, element: 'Fire', elem_strength: 1.0 },
-  reaper:      { name: '死神', cost: 250, hp: 200, atk: 55, speed: 0.2, sprite: 'reaper', range: 10, element: 'Fire', elem_strength: 1.0 },
-  knight:      { name: '烈焰騎士', cost: 450, hp: 450, atk: 85, speed: 0.2, sprite: 'boss', range: 13, element: 'Fire', elem_strength: 1.0 },
-  dragonlord:  { name: '龍領主', cost: 750, hp: 900, atk: 180, speed: 0.2, sprite: 'dragon', range: 18, element: 'Fire', elem_strength: 1.0 }
+  mage:        { name: '魔法師', cost: 100, hp: 60, atk: 28, speed: 0.1, sprite: 'mage', range: 28, element: 'Fire', elem_strength: 1.0 }, // 提升 ATK, Range
+  reaper:      { name: '死神', cost: 250, hp: 250, atk: 65, speed: 0.2, sprite: 'reaper', range: 10, element: 'Fire', elem_strength: 1.0 }, // 提升 HP, ATK
+  knight:      { name: '烈焰騎士', cost: 450, hp: 550, atk: 95, speed: 0.2, sprite: 'boss', range: 15, element: 'Fire', elem_strength: 1.0 }, // 提升 HP, ATK, Range
+  dragonlord:  { name: '龍領主', cost: 750, hp: 1100, atk: 200, speed: 0.2, sprite: 'dragon', range: 20, element: 'Fire', elem_strength: 1.0 }  // 提升 HP, ATK, Range
 };
 
 // 敵人單位類型定義（使用 canvas.js 中現有但未被士兵使用的 sprite）
 const BOSS_SPECS = {
-  demon_lord: { name: '惡魔領主', baseHp: 500, baseAtk: 40, speed: 0.25, sprite: 'demon', scaleFactor: 2.0 },
-  dragon_king: { name: '龍王', baseHp: 800, baseAtk: 60, speed: 0.3, sprite: 'dragon', scaleFactor: 2.5 }
+  demon_lord: { name: '惡魔領主', baseHp: 400, baseAtk: 35, speed: 0.25, sprite: 'demon', scaleFactor: 1.2 },
+  dragon_king: { name: '龍王', baseHp: 450, baseAtk: 40, speed: 0.3, sprite: 'dragon', scaleFactor: 1.4 }
 };
 
 const ENEMY_SPECS = {
@@ -77,11 +70,12 @@ const ENEMY_SPECS = {
 // scale: 生命值隨波次增加比例, atk 隨波次增加比例...等
 function scaleEnemy(base, wave) {
   const e = JSON.parse(JSON.stringify(base));
-  const scale = 1 + (wave - 1) * 0.15; // 波次難度增加
-  e.hp = Math.round((e.baseHp || 40) * scale);
+  const hpScale = 1 + (wave - 1) * 0.25; // 大幅提升 HP 成長
+  const atkScale = 1 + (wave - 1) * 0.2;  // 大幅提升 ATK 成長
+  e.hp = Math.round((e.baseHp || 40) * hpScale);
   e.maxHp = e.hp;
-  e.atk = Math.round((e.baseAtk || 6) * (1 + (wave - 1) * 0.1));
-  e.speed = (base.speed || 0.5) * (1 + (wave - 1) * 0.02);
+  e.atk = Math.round((e.baseAtk || 6) * atkScale);
+  e.speed = (base.speed || 0.5) * (1 + (wave - 1) * 0.02); // 速度維持不變或微幅增加
   
   // 怪物從右側建築物內部 (與封面樣式對齊)
   // 使用邏輯座標 (0-120)，樣式中怪物產點約在 c=105
@@ -122,15 +116,6 @@ function spawnWaveEnemy() {
   const elKeys = Object.keys(ELEMENTS);
   enemy.element = elKeys[Math.floor(Math.random() * elKeys.length)];
   
-  if (enemy.element === 'FIRE') {
-    enemy.atk = Math.round(enemy.atk * 1.2);
-  } else if (enemy.element === 'WATER') {
-    enemy.hp = Math.round(enemy.hp * 1.2);
-    enemy.maxHp = enemy.hp;
-  } else if (enemy.element === 'EARTH') {
-    enemy.speed *= 0.8;
-  }
-  
   Dungeon.enemies.push(enemy);
 }
 
@@ -155,45 +140,88 @@ function dqmd(btn, m) {
   dqStartInfo();
 }
 
-function dqStartInfo() {
-  let grammarCount = 0;
-  let filteredGrammar = [];
+function getFilteredGrammar() {
   if (dQmd === 'mixed') {
-    filteredGrammar = dQlv === 'all' ? [...gQuestions] : gQuestions.filter(g => g.level === dQlv);
-  } else {
-    filteredGrammar = dQlv === 'all' ? gQuestions.filter(g => g.type === dQmd) : gQuestions.filter(g => g.level === dQlv && g.type === dQmd);
+    return dQlv === 'all' ? [...gQuestions] : gQuestions.filter(g => g.level === dQlv);
   }
-  grammarCount = filteredGrammar.length;
+  return dQlv === 'all' ? gQuestions.filter(g => g.type === dQmd) : gQuestions.filter(g => g.level === dQlv && g.type === dQmd);
+}
+
+function dqStartInfo() {
+  const filtered = getFilteredGrammar();
   const startBtn = document.querySelector('button[onclick*="startDungeon"]');
-  if (startBtn) {
-    startBtn.disabled = grammarCount < 2;
-  }
+  if (startBtn) startBtn.disabled = filtered.length < 2;
 }
 
 function buildPools() {
-  let filteredGrammarQuestions = [];
-  if (dQmd === 'mixed') {
-    filteredGrammarQuestions = dQlv === 'all' ? [...gQuestions] : gQuestions.filter(g => g.level === dQlv);
-  } else {
-    filteredGrammarQuestions = dQlv === 'all' ? gQuestions.filter(g => g.type === dQmd) : gQuestions.filter(g => g.level === dQlv && g.type === dQmd);
+  const filtered = getFilteredGrammar();
+  if (filtered.length === 0) {
+    gPool = [];
+    gIdx = 0;
+    return;
   }
-  gPool = shuffle(filteredGrammarQuestions);
+
+  // 將題目分為「未看過」和「已看過」
+  let unused = filtered.filter(q => !gUsedIds.includes(q.id));
+  
+  // 如果所有篩選出的題目都看過了，就針對這些篩選後的題目重置「已看過」狀態
+  if (unused.length === 0) {
+    const filteredIds = filtered.map(q => q.id);
+    gUsedIds = gUsedIds.filter(id => !filteredIds.includes(id));
+    unused = filtered;
+    saveUsedIdsToLS();
+    console.log('[Dungeon] 篩選池已全部看過，重置該池的已看過狀態');
+  }
+
+  gPool = shuffle(unused);
   gIdx = 0;
+  console.log(`[Dungeon] 建立題目池，優先使用未看過題目，剩餘：${unused.length} 題`);
 }
 
 function nextGrammarQ() {
-  if (!gPool.length) return null;
-  const q = gPool[gIdx % gPool.length];
-  gIdx++;
-  if (gIdx >= gPool.length) {
-    gPool = shuffle(gPool);
-    gIdx = 0;
+  if (!gPool.length) {
+    buildPools(); // 嘗試重新建立
+    if (!gPool.length) return null;
   }
+
+  const q = gPool[gIdx];
+  
+  // 記錄已使用
+  if (q && q.id) {
+    if (!gUsedIds.includes(q.id)) {
+      gUsedIds.push(q.id);
+      saveUsedIdsToLS(); // 持久化儲存
+    }
+  }
+
+  gIdx++;
+  
+  // 如果這一輪（未看過的）用完了，重新洗牌下一批
+  if (gIdx >= gPool.length) {
+    buildPools();
+  }
+  
   return q;
 }
 
 function nextQItem() {
   return { type: 'grammar', data: nextGrammarQ() };
+}
+
+function resetDungeonState() {
+  Dungeon.active = false;
+  Dungeon.soldiers = [];
+  Dungeon.enemies = [];
+  Dungeon.correctCount = 0;
+  Dungeon.isWaveActive = false;
+  Dungeon.isBossWave = false;
+  dQTot = 0;
+  dQC = 0;
+  dQW = 0;
+  if (typeof battleAnim !== 'undefined') {
+    battleAnim.particles = [];
+    battleAnim.floats = [];
+  }
 }
 
 function startDungeon() {
@@ -206,22 +234,13 @@ function startDungeon() {
     alert("題目不足（至少需要 2 題），請先新增題目！");
     return;
   }
+  resetDungeonState();
   Dungeon.active = true;
   Dungeon.wave = 1;
-  Dungeon.gold = 200;
+  Dungeon.gold = 300;
   Dungeon.castleHp = 200;
   Dungeon.maxCastleHp = 200;
   
-  // 初始化士兵與敵人陣列，確保它們是空且可操作的
-  Dungeon.soldiers = [];
-  Dungeon.enemies = [];
-  Dungeon.soldiers = [];
-  Dungeon.enemies = [];
-  Dungeon.correctCount = 0;
-  Dungeon.isWaveActive = false;
-  dQTot = 0;
-  dQC = 0;
-  dQW = 0;
   beginBattle();
 }
 
@@ -239,7 +258,7 @@ function beginBattle() {
 
 function startNextWave() {
   Dungeon.waveSpawnTimer = 0;
-  Dungeon.enemiesToSpawn = 5 + Dungeon.wave * 2;
+  Dungeon.enemiesToSpawn = 7; // 固定每波敵人數量為 7
   Dungeon.isWaveActive = true;
   Dungeon.waveTimer = 30 + Dungeon.wave * 5;
   Dungeon.isBossWave = false;
@@ -269,7 +288,7 @@ function startNextWave() {
 function updateBattleUI() {
   const floorChip = document.getElementById('floor-chip');
   if (floorChip) floorChip.textContent = `WAVE ${Dungeon.wave}`;
-  const goldDisp = document.getElementById('exp-disp');
+  const goldDisp = document.getElementById('gold-disp');
   if (goldDisp) goldDisp.textContent = Dungeon.gold;
   const timerDisp = document.getElementById('wave-timer');
   if (timerDisp) {
@@ -396,19 +415,25 @@ function renderGrammarQ(q) {
   document.getElementById('dqcard').innerHTML = html;
 }
 
+function getDungeonReward() {
+  return 50 + (player.lv * 5);
+}
+
 function selDQ(btn, type, sel, cor, evt) {
   if (dAnswered) return;
   dAnswered = true;
   dQTot++;
   const ok = String(sel) === String(cor);
   const q = gPool[(gIdx - 1 + gPool.length) % gPool.length];
+  const reward = getDungeonReward();
+
   if (ok) {
     dQC++;
     player.combo = (player.combo || 0) + 1;
-    if (player.combo > (player.maxCombo || 0)) player.maxCombo = player.combo;
-    if (player.stats && player.combo > (player.stats.maxCombo || 0)) player.stats.maxCombo = player.combo;
+    player.maxCombo = Math.max(player.maxCombo || 0, player.combo);
+    if (player.stats) player.stats.maxCombo = Math.max(player.stats.maxCombo || 0, player.combo);
+    
     Dungeon.correctCount = (Dungeon.correctCount || 0) + 1;
-    const reward = 50 + (player.lv * 5);
     Dungeon.gold += reward;
     sfxCorrect();
     spawnFloat(`+$${reward}`, cvW * 0.5, cvH * 0.5, 'var(--gold)');
@@ -419,13 +444,10 @@ function selDQ(btn, type, sel, cor, evt) {
       player.stats.typeStats[q.type].c++;
     }
     if (typeof gainExp === 'function') gainExp(10);
-    // 答對後顯示繼續按鈕
-    const nxt = document.getElementById('dqnxt');
-    if (nxt) nxt.style.display = 'block';
   } else {
     dQW++;
     player.combo = 0;
-    const penalty = 20 + (player.lv * 5);
+    const penalty = 10; // 固定答錯扣血為 10 點
     Dungeon.castleHp -= penalty;
     sfxWrong();
     spawnFloat(`-${penalty}HP`, 30, cvH * 0.5, 'var(--red)');
@@ -436,18 +458,23 @@ function selDQ(btn, type, sel, cor, evt) {
       player.stats.typeStats[q.type].w++;
     }
   }
+
   document.querySelectorAll('#dq-active .opt-btn').forEach(b => {
     b.disabled = true;
     const idx = parseInt(b.dataset.idx);
     if (idx === parseInt(cor)) b.classList.add('correct');
     else if (idx === parseInt(sel) && !ok) b.classList.add('wrong');
   });
+
   const fb = document.getElementById('dqfb');
   fb.style.display = 'block';
   fb.className = 'fb ' + (ok ? 'ok' : 'no');
   let explain = q?.explain || '無詳細解釋。';
-  fb.innerHTML = (ok ? `✅ 答對！+$${50 + player.lv*5}` : `❌ 答錯！正確答案是：<strong>${['A','B','C','D'][cor]}</strong>`) +
+  fb.innerHTML = (ok ? `✅ 答對！+$${reward}` : `❌ 答錯！正確答案是：<strong>${['A','B','C','D'][cor]}</strong>`) +
                  `<div class="fb-explain">${explain}</div>`;
+
+  const nxt = document.getElementById('dqnxt');
+  if (nxt) nxt.style.display = 'block';
   if (q) {
     let sentenceToSpeak = "";
     if (q.type === "fill" && q.fullSentence) {
@@ -468,8 +495,6 @@ function selDQ(btn, type, sel, cor, evt) {
       speak(sentenceToSpeak);
     }
   }
-  const nxt = document.getElementById('dqnxt');
-  if (nxt) nxt.style.display = 'block';
 }
 
 function nextDQ() {
@@ -482,9 +507,7 @@ function continueDungeon() {
 }
 
 function exitDungeon() {
-  Dungeon.active = false;
-  Dungeon.soldiers = [];
-  Dungeon.enemies = [];
+  resetDungeonState();
   dqshow("dq-start");
   saveAll();
   dLog("🏃 已返回主選單。", "log-info");
@@ -495,17 +518,18 @@ function endGame() {
   const roundWrong = dQW;
   const wavesCompleted = Math.max(0, Dungeon.wave - 1);
   if (!player) return;
-  // 等級獎勵倍率：每提升一級增加 10% 寶石獲取 (例如 Lv1 1.0, Lv2 1.1)
+
   const lvBonus = 1 + ((player.lv || 1) - 1) * 0.1;
   const rewardGems = Math.round(((wavesCompleted * 10) + (roundCorrect * 2)) * lvBonus);
-  player.gems = Number(player.gems || 0) + Number(rewardGems);
+  
+  player.gems = (player.gems || 0) + rewardGems;
   player.stats = player.stats || {};
-  player.stats.totalWaves = Number(player.stats.totalWaves || 0) + Number(wavesCompleted);
-  player.stats.totalCorrect = Number(player.stats.totalCorrect || 0) + Number(roundCorrect);
-  player.stats.totalWrong = Number(player.stats.totalWrong || 0) + Number(roundWrong);
-  player.stats.totalGemsEarned = Number(player.stats.totalGemsEarned || 0) + Number(rewardGems);
-  if (player.maxCombo < (player.combo || 0)) player.maxCombo = player.combo;
-  if (player.stats.maxCombo < (player.maxCombo || 0)) player.stats.maxCombo = player.maxCombo;
+  player.stats.totalWaves = (player.stats.totalWaves || 0) + wavesCompleted;
+  player.stats.totalCorrect = (player.stats.totalCorrect || 0) + roundCorrect;
+  player.stats.totalWrong = (player.stats.totalWrong || 0) + roundWrong;
+  player.stats.totalGemsEarned = (player.stats.totalGemsEarned || 0) + rewardGems;
+  player.stats.maxCombo = Math.max(player.stats.maxCombo || 0, player.maxCombo || 0, player.combo || 0);
+
   dqshow("dq-result");
   const updateResultUI = () => {
     const resIco = document.getElementById("res-ico");
@@ -520,19 +544,14 @@ function endGame() {
     if (contBtn) contBtn.style.display = "none";
   };
   updateResultUI();
-  setTimeout(updateResultUI, 100);
+
   const gemStat = document.getElementById("stat-gems");
   if (gemStat) gemStat.textContent = player.gems;
   if (typeof renderUpgradeMenu === 'function') renderUpgradeMenu();
+  
   dLog(`🎮 戰鬥結束！完成 ${wavesCompleted} 波，本輪答對 ${roundCorrect} 題，獲得 ${rewardGems} 💎`, "log-gold");
-  Dungeon.active = false;
-  Dungeon.soldiers = [];
-  Dungeon.enemies = [];
-  Dungeon.correctCount = 0;
-  Dungeon.isBossWave = false;
-  dQC = 0;
-  dQW = 0;
-  dQTot = 0;
+  
+  resetDungeonState();
   player.combo = 0;
   saveAll();
 }
@@ -545,6 +564,12 @@ function dLog(msg, cls = 'log-info') {
   d.className = cls;
   d.textContent = `[${now}] ${msg}`;
   log.appendChild(d);
+  
+  // 限制 Log 數量，防止 DOM 節點過多導致卡頓 (最多保留 50 條)
+  if (log.childNodes.length > 50) {
+    log.removeChild(log.firstChild);
+  }
+  
   log.scrollTop = log.scrollHeight;
 }
 

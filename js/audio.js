@@ -25,6 +25,12 @@ function playTone(freq, dur, type = 'square', vol = 0.15) {
     
     osc.start(ac.currentTime);
     osc.stop(ac.currentTime + dur);
+
+    // 釋放資源：在音效結束後斷開節點連接
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
   } catch (e) {}
 }
 

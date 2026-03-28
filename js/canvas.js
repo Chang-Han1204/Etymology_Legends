@@ -1,6 +1,3 @@
-// ══════════════════════════════════════════════
-// CANVAS BATTLE RENDERER — 獵魔村物語 Style
-// ══════════════════════════════════════════════
 const cvs = document.getElementById('battle-canvas');
 const ctx2 = cvs.getContext('2d');
 window.cvW = 0;
@@ -19,338 +16,19 @@ window.addEventListener('resize', () => { resizeCanvas(); if (!animFrame) render
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', resizeCanvas);
 else resizeCanvas();
 
+const spriteCache = {};
 
-const CHAR_SPRITES = {
-  player: {
-    pixels: [
-      [0,1,1,1,1,1,1,1,1,0],
-      [0,0,2,2,2,2,2,2,0,0],
-      [0,0,2,2,2,2,2,2,0,0],
-      [0,0,3,3,3,3,3,3,0,0],
-      [0,0,3,4,3,3,4,3,0,0],
-      [0,0,3,3,3,3,3,3,0,0],
-      [0,0,0,3,5,5,3,0,0,0],
-      [0,0,0,5,5,5,5,0,0,0],
-      [0,0,0,6,6,6,6,0,0,0],
-      [0,0,6,6,6,6,6,6,0,0],
-      [0,0,6,6,7,6,7,6,0,0],
-      [0,0,0,8,8,0,8,8,0,0],
-    ],
-    colors:['transparent','#2a1a08','#1a1005','#d8c090','#1a0808','#b89060','#282018','#1a1410','#1e1810']
-  },
-  mage: {
-    pixels: [
-      [0,0,0,1,0,0,0,0,0,0],
-      [0,0,1,1,1,0,0,0,0,0],
-      [0,1,1,1,1,1,0,0,0,0],
-      [1,1,1,1,1,1,1,0,0,0],
-      [0,0,2,2,2,2,2,0,0,0],
-      [0,0,2,3,2,3,2,0,0,0],
-      [0,0,2,2,2,2,2,0,0,0],
-      [0,4,4,4,4,4,4,4,0,0],
-      [0,4,4,4,4,4,4,4,0,0],
-      [0,4,4,5,4,5,4,4,0,0],
-      [0,0,4,4,4,4,4,0,0,0],
-      [0,0,6,6,0,6,6,0,0,0],
-    ],
-    colors:['transparent','#1a0838','#e8d8b0','#cc44ff','#5010a0','#ff80ff','#0a0020']
-  },
-  archer: {
-    pixels: [
-      [0,0,1,1,1,1,0,0,0,0],
-      [0,1,2,2,2,2,1,0,3,0],
-      [1,2,2,2,2,2,2,1,3,0],
-      [1,2,4,2,2,4,2,1,3,0],
-      [1,2,2,2,2,2,2,1,3,0],
-      [0,1,5,5,5,5,1,0,3,0],
-      [0,6,6,6,6,6,6,0,3,0],
-      [0,6,6,6,6,6,6,6,3,6],
-      [0,6,6,7,6,6,7,6,0,0],
-      [0,0,8,8,0,0,8,8,0,0],
-    ],
-  colors: ['transparent','#2c3e50','#d8c090','#a0522d','#1a0808','#b89060','#27ae60','#1a1410','#1e1810']
-  },
-  wyvern: {
-    pixels: [
-      [0,0,1,1,0,0,0,0,0,1,1,0],
-      [0,1,2,2,1,0,0,0,1,2,2,1],
-      [1,2,2,2,2,1,1,1,2,2,2,2],
-      [1,2,3,3,2,2,2,2,2,3,3,2],
-      [0,1,2,2,4,4,4,4,2,2,1,0],
-      [0,0,1,4,5,4,5,4,1,0,0,0],
-      [0,0,0,1,4,4,4,1,0,0,0,0],
-      [0,0,1,0,1,1,0,1,0,0,0,0],
-    ],
-    colors: ['transparent','#4b0082','#8a2be2','#ff00ff','#1a1a1a','#ffffff']
-  },
-  paladin: {
-    pixels: [
-      [0,0,1,1,1,1,0,0,0,0],
-      [0,1,2,2,2,2,1,0,0,0],
-      [1,3,2,2,2,2,3,1,0,0],
-      [1,3,2,4,4,2,3,1,0,0],
-      [5,5,1,2,2,1,5,5,0,0],
-      [5,6,1,7,7,1,6,5,0,0],
-      [5,6,6,7,7,6,6,5,0,0],
-      [5,6,6,7,7,6,6,5,0,0],
-      [0,1,6,6,6,6,1,0,0,0],
-      [0,1,6,7,7,6,1,0,0,0],
-      [0,0,8,8,0,8,8,0,0,0],
-      [0,8,8,0,0,0,8,8,0,0],
-    ],
-    colors: ['transparent','#2c3e50','#bdc3c7','#f1c40f','#34495e','#d4af37','#95a5a6','#ecf0f1','#7f8c8d']
-  },
-  cleric: {
-    pixels: [
-      [0,0,0,1,1,1,0,0,0,0],
-      [0,0,1,2,2,2,1,0,3,0],
-      [0,1,2,2,2,2,2,1,3,0],
-      [0,1,2,4,2,4,2,1,5,0],
-      [0,1,2,2,2,2,2,1,3,0],
-      [0,0,1,6,6,6,1,0,3,0],
-      [0,1,6,6,6,6,6,1,0,0],
-      [0,1,7,7,7,7,7,1,0,0],
-      [1,7,7,7,7,7,7,7,1,0],
-      [1,7,7,7,7,7,7,7,1,0],
-      [0,1,8,8,1,8,8,1,0,0],
-    ],
-    colors: ['transparent','#2980b9','#d8c090','#f1c40f','#1a0808','#ffffff','#3498db','#ecf0f1','#2c3e50']
-  },
-  reaper: {
-    pixels: [
-      [0,0,1,1,1,1,0,2,2,2],
-      [0,1,3,3,3,3,1,2,0,0],
-      [1,3,4,3,3,4,3,1,0,0],
-      [1,3,3,3,3,3,3,1,0,0],
-      [1,3,3,1,1,3,3,1,0,0],
-      [0,1,5,5,5,5,1,0,0,0],
-      [0,5,5,5,5,5,5,0,0,0],
-      [0,5,5,5,5,5,5,0,0,0],
-      [0,5,5,5,5,5,5,0,0,0],
-      [0,5,5,5,5,5,5,0,0,0],
-      [0,1,0,0,0,0,1,0,0,0],
-    ],
-    colors: ['transparent','#000000','#95a5a6','#2c3e50','#ff0000','#1a1a1a']
-  },
-  mimic: {
-    pixels: [
-      [0,1,1,1,1,1,1,1,1,0],
-      [1,2,2,2,2,2,2,2,2,1],
-      [1,3,4,3,4,3,4,3,2,1],
-      [1,5,5,5,5,5,5,5,2,1],
-      [0,1,1,1,6,6,1,1,1,0],
-      [1,7,7,7,6,6,7,7,7,1],
-      [1,7,8,7,7,7,7,8,7,1],
-      [1,7,7,7,7,7,7,7,7,1],
-      [1,2,2,2,2,2,2,2,2,1],
-      [0,1,1,1,1,1,1,1,1,0],
-    ],
-    colors: ['transparent','#2a1a08','#5d4037','#ffffff','#f44336','#ffeb3b','#d32f2f','#3e2723','#6d4c41']
-  },
-  hero: {
-    pixels: [
-      [0,0,1,1,1,1,0,0,0,0],
-      [0,1,2,2,2,2,1,0,0,0], // 金髮
-      [0,1,3,4,3,4,1,0,0,0], 
-      [0,1,3,3,3,3,1,0,0,0],
-      [5,5,1,6,6,1,0,7,0,0], // 5 是紅披風, 7 是劍
-      [5,5,1,6,6,1,0,7,0,0],
-      [5,5,1,6,6,1,1,7,1,0],
-      [0,0,1,6,6,1,0,7,0,0],
-      [0,0,1,6,6,1,0,7,0,0],
-      [0,1,1,8,8,1,1,0,0,0],
-      [0,1,8,0,0,8,1,0,0,0],
-    ],
-    colors: ['transparent', '#1a1410', '#f1c40f', '#ffe0bd', '#333333', '#e74c3c', '#2980b9', '#bdc3c7', '#5d4037']
-  },
-  assassin: {
-    pixels: [
-      [0,0,1,1,1,1,0,0,0,0],
-      [0,1,2,2,2,2,1,0,0,0], // 蒙面頭部
-      [0,1,2,3,2,3,1,0,0,0], // 眼睛露出
-      [0,1,1,1,1,1,1,0,0,0],
-      [4,0,1,5,5,1,0,4,0,0], // 4 是匕首
-      [1,4,1,5,5,1,4,1,0,0],
-      [0,1,1,5,5,1,1,0,0,0],
-      [0,0,1,5,5,1,0,0,0,0],
-      [0,0,1,5,5,1,0,0,0,0],
-      [0,1,1,0,0,1,1,0,0,0],
-      [1,1,0,0,0,0,1,1,0,0],
-    ],
-    colors: ['transparent', '#000000', '#2c3e50', '#ff0000', '#bdc3c7', '#1a1a1a']
-    // 3: 紅色殺氣眼神, 4: 銀色匕首
-  },
-  fire_wisp: {
-    pixels: [
-      [0,0,0,1,1,0,0,0],
-      [0,0,1,2,2,1,0,0],
-      [0,1,2,3,3,2,1,0],
-      [1,2,3,4,4,3,2,1], // 4 是最熱的中心(白)
-      [1,2,3,4,4,3,2,1],
-      [0,1,2,3,3,2,1,0],
-      [0,0,1,2,2,1,0,0],
-      [0,1,0,1,1,0,1,0], // 底部火花
-    ],
-    colors: ['transparent', '#900c3f', '#c70039', '#ff5733', '#ffffff']
-  },
-  ice_golem: {
-    pixels: [
-      [0,1,1,1,1,1,1,0],
-      [1,2,2,2,2,2,2,1],
-      [1,2,3,3,3,3,2,1],
-      [1,2,3,4,4,3,2,1], // 4 是冰晶閃光
-      [1,2,3,3,3,3,2,1],
-      [1,2,2,2,2,2,2,1],
-      [1,1,2,2,2,2,1,1],
-      [0,1,5,5,5,5,1,0], // 5 是厚實的底部
-      [0,1,5,0,0,5,1,0],
-    ],
-    colors: ['transparent', '#2e86c1', '#85c1e9', '#aed6f1', '#ffffff', '#1b4f72']
-  },
-  hydra: {
-    pixels: [
-      [1,1,0,0,1,1,0,0,1,1], // 三個頭的頂部
-      [1,2,1,0,1,2,1,0,1,2,1],
-      [1,3,1,1,1,3,1,1,1,3,1], // 眼睛
-      [0,1,4,4,1,4,4,1,4,4,1], // 脖子
-      [0,0,1,4,4,1,4,4,1,0],
-      [0,0,1,5,5,5,5,5,1,0], // 身體匯合
-      [0,1,5,5,5,5,5,5,5,1],
-      [1,5,5,6,6,6,6,6,5,5,1], // 腹部紋路
-      [1,5,5,5,5,5,5,5,5,5,1],
-      [0,1,1,1,1,1,1,1,1,1,0],
-    ],
-    colors: ['transparent', '#145a32', '#229954', '#ff0000', '#27ae60', '#1d8348', '#f1c40f']
-    // 3: 紅眼, 6: 黃色腹部
-  },
-  slime: {
-    pixels: [
-      [0,0,0,1,1,1,1,0,0],
-      [0,0,1,2,2,2,2,1,0],
-      [0,1,2,2,2,2,2,2,1],
-      [1,2,2,3,2,2,3,2,2],
-      [1,2,2,2,2,2,2,2,2],
-      [1,2,4,2,2,2,4,2,2],
-      [0,1,2,2,2,2,2,1,0],
-      [0,0,1,1,4,1,1,0,0],
-      [0,0,0,0,4,0,0,0,0],
-    ],
-    colors:['transparent','#0c2208','#208020','#ffffff','#104010']
-  },
-  skeleton: {
-    pixels: [
-      [0,0,1,1,1,1,0,0],
-      [0,1,2,2,2,2,1,0],
-      [0,1,2,3,2,3,2,1],
-      [0,1,2,2,2,2,2,1],
-      [0,0,1,4,4,4,1,0],
-      [0,0,5,5,5,5,5,0],
-      [0,0,5,6,5,6,5,0],
-      [0,0,5,5,5,5,5,0],
-      [0,0,7,0,0,0,7,0],
-      [0,0,7,0,0,0,7,0],
-      [0,7,0,0,0,0,0,7],
-    ],
-    colors:['transparent','#1a1008','#d0c080','#1a0808','#e8dca0','#a09060','#806840','#604828']
-  },
-  ghost: {
-    pixels: [
-      [0,0,1,1,1,1,0,0],
-      [0,1,2,2,2,2,1,0],
-      [1,2,2,3,2,3,2,1],
-      [1,2,2,2,2,2,2,1],
-      [1,2,2,2,2,2,2,1],
-      [1,2,2,2,2,2,2,1],
-      [1,2,1,2,1,2,1,2],
-      [0,1,0,1,0,1,0,1],
-    ],
-    colors:['transparent','rgba(140,120,200,0.45)','rgba(200,180,255,0.55)','#e0c0ff']
-  },
-  spider: {
-    pixels: [
-      [1,0,0,2,2,0,0,1],
-      [0,1,2,2,2,2,1,0],
-      [1,2,2,3,3,2,2,1],
-      [2,2,3,4,4,3,2,2],
-      [1,2,2,3,3,2,2,1],
-      [0,1,2,2,2,2,1,0],
-      [1,0,1,0,0,1,0,1],
-      [0,0,1,0,0,1,0,0],
-    ],
-    colors:['transparent','#1a0808','#501008','#cc2020','#ff4040']
-  },
-  demon: {
-    pixels: [
-      [0,1,0,0,0,0,1,0],
-      [0,1,2,2,2,2,1,0],
-      [1,2,2,3,2,3,2,1],
-      [1,2,2,2,2,2,2,1],
-      [0,1,2,4,2,4,2,1],
-      [0,0,5,5,5,5,0,0],
-      [0,5,5,5,5,5,5,0],
-      [0,5,5,6,5,6,5,0],
-      [0,0,5,5,0,5,5,0],
-      [0,0,1,0,0,0,1,0],
-    ],
-    colors:['transparent','#800010','#c02020','#ff4040','#ffe060','#601018','#802028']
-  },
-  dragon: {
-    pixels: [
-      [1,0,0,0,0,0,0,0,1,0],
-      [1,2,0,0,0,0,0,2,1,0],
-      [1,2,2,0,0,0,2,2,1,0],
-      [0,1,2,2,3,3,2,2,1,0],
-      [0,0,1,3,4,4,3,1,0,0],
-      [0,0,1,3,5,3,5,3,1,0],
-      [0,0,0,1,6,6,6,1,0,0],
-      [0,0,1,0,1,1,0,1,0,0],
-      [0,1,0,0,0,0,0,0,1,0],
-    ],
-    colors:['transparent','#601010','#982018','#c03020','#e05030','#ff8040','#ff2000']
-  },
-  boss: {
-    pixels: [
-      [0,1,0,0,2,2,0,0,1,0],
-      [0,1,2,3,3,3,3,2,1,0],
-      [1,2,3,3,3,3,3,3,2,1],
-      [1,2,3,4,3,3,4,3,2,1],
-      [1,2,3,3,5,3,5,3,2,1],
-      [0,1,2,3,3,3,3,2,1,0],
-      [0,6,6,6,6,6,6,6,6,0],
-      [6,6,6,7,6,6,7,6,6,6],
-      [6,6,6,6,6,6,6,6,6,6],
-      [0,6,6,6,6,6,6,6,6,0],
-      [0,0,8,8,0,0,8,8,0,0],
-    ],
-    colors:["transparent","#2a0850","#5010a0","#200030","#9030f0","#ff10ff","#180028","#8020cc","#d8c890"]
-  },
-  assassin: { // 新增刺客外觀
-    pixels: [
-      [0,0,0,1,1,0,0,0],
-      [0,0,1,2,2,1,0,0],
-      [0,1,2,3,2,2,1,0],
-      [1,2,3,4,2,3,2,1],
-      [1,2,3,3,3,3,2,1],
-      [0,1,3,5,5,3,1,0],
-      [0,0,1,5,5,1,0,0],
-      [0,0,0,6,6,0,0,0],
-      [0,6,6,0,0,6,6,0],
-    ],
-    colors:["transparent","#1a1a1a","#3a3a3a","#7f8c8d","#bdc3c7","#c0392b","#1a1410"]
-  }
-};
+function createCachedSprite(spec, px, flipX = false, element = null) {
+  const key = `${spec.name || 'unknown'}-${px}-${flipX}-${element || 'none'}`;
+  if (spriteCache[key]) return spriteCache[key];
 
-function drawPixelChar(spec, x, y, px, flipX = false, element = null) {
-  if (!spec) return;
   const { pixels, colors } = spec;
   const rows = pixels.length, cols = pixels[0].length;
-  
-  // 屬性濾鏡效果
-  if (element && ELEMENTS[element.toUpperCase()]) {
-    ctx2.save();
-    // 使用簡單的疊加色來區分屬性，而不是複雜的色相旋轉，以保持效能
-    // 或者我們可以在繪製後套用 globalCompositeOperation
-  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(cols * px);
+  canvas.height = Math.round(rows * px);
+  const ctx = canvas.getContext('2d');
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -358,34 +36,45 @@ function drawPixelChar(spec, x, y, px, flipX = false, element = null) {
       if (ci === 0 || !colors[ci] || colors[ci] === 'transparent') continue;
       
       let color = colors[ci];
-      // 如果有屬性，對非透明色進行微調（排除皮膚色或白色等）
+      // 如果有屬性，對非透明色進行微調
       if (element) {
         const elCfg = ELEMENTS[element.toUpperCase()];
-        if (elCfg && ci > 1) { // 假設 0 是透明，1 是輪廓，>1 是填色
-           // 這裡可以根據屬性稍微混合顏色，但為了簡單，我們直接在角色下方畫個光環或改變特定顏色
+        if (elCfg && ci > 1) { 
+           // 可以在這裡應用更複雜的顏色混合，但目前保持簡單以提升效能
         }
       }
 
-      ctx2.fillStyle = color;
+      ctx.fillStyle = color;
       const dc = flipX ? cols - 1 - c : c;
-      // 使用 Math.ceil(px) 稍微擴大像素塊，消除子像素渲染產生的黑線間隙
-      ctx2.fillRect(Math.round(x + dc * px), Math.round(y + r * px), Math.ceil(px), Math.ceil(px));
+      ctx.fillRect(Math.round(dc * px), Math.round(r * px), Math.ceil(px), Math.ceil(px));
     }
   }
-  
-  // 在角色腳下畫屬性光環
+
+  // 在角色腳下畫屬性光環 (在快取中繪製)
   if (element) {
     const elCfg = ELEMENTS[element.toUpperCase()];
-    ctx2.globalAlpha = 0.3;
-    ctx2.fillStyle = elCfg.color;
-    ctx2.beginPath();
-    ctx2.ellipse(x + (cols * px) / 2, y + rows * px, (cols * px) / 1.5, 4, 0, 0, Math.PI * 2);
-    ctx2.fill();
-    ctx2.globalAlpha = 1.0;
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = elCfg.color;
+    ctx.beginPath();
+    ctx.ellipse((cols * px) / 2, rows * px, (cols * px) / 1.5, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
     
-    // 畫屬性圖示
-    ctx2.font = "10px Arial";
-    ctx2.fillText(elCfg.icon, x - 5, y + 5);
+    // 畫屬性圖示 (在快取中繪製)
+    ctx.font = "10px Arial";
+    ctx.fillText(elCfg.icon, -5, 5); // 相對於 sprite canvas 的座標
+  }
+
+  spriteCache[key] = canvas;
+  return canvas;
+}
+
+function drawPixelChar(spec, x, y, px, flipX = false, element = null) {
+  if (!spec) return;
+
+  const cachedSprite = createCachedSprite(spec, px, flipX, element);
+  if (cachedSprite) {
+    ctx2.drawImage(cachedSprite, x, y);
   }
 }
 
@@ -420,7 +109,7 @@ function getSoldierSprite(s) {
   return CHAR_SPRITES.player; // 戰士使用預設外觀
 }
 
-let battleAnim = { playerShake:0, enemyShake:0, flash:0, flashColor:'#fff', bg:0, particles:[], torchT:0 };
+let battleAnim = { playerShake:0, enemyShake:0, flash:0, flashColor:'#fff', bg:0, particles:[], floats:[], torchT:0 };
 let animFrame = null;
 
 function drawCastleHpBar(x, y, px) {
@@ -560,13 +249,32 @@ function renderBattleCanvas() {
     ctx2.fillText('🛡️ DEFEND THE ROOT ⚔️', centerX, centerY + px * 6);
   }
 
-  // 粒子與特效
+  // 粒子與特效 (限制最大數量以提升效能)
+  if (battleAnim.particles.length > 100) battleAnim.particles.splice(0, battleAnim.particles.length - 100);
   battleAnim.particles = battleAnim.particles.filter(p => {
-    p.x += p.vx; p.y += p.vy; p.life -= 0.038; p.vy += 0.2;
+    p.x += p.vx; p.y += p.vy; p.life -= 0.038; p.vy += 0.15;
     if (p.life <= 0) return false;
     ctx2.globalAlpha = Math.max(0, p.life); ctx2.fillStyle = p.color;
     ctx2.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
     ctx2.globalAlpha = 1; return true;
+  });
+
+  // 渲染浮動文字 (替代 DOM spawnFloat)
+  battleAnim.floats = battleAnim.floats.filter(f => {
+    f.y -= 0.5; f.life -= 0.015; // 稍微減慢消失速度，讓玩家看得更清楚
+    if (f.life <= 0) return false;
+    ctx2.save(); // 使用 save/restore 確保狀態不污染
+    ctx2.globalAlpha = Math.min(1, f.life * 2);
+    ctx2.fillStyle = f.color;
+    ctx2.font = `bold ${f.size || 12}px "Silkscreen", "Press Start 2P", monospace`;
+    ctx2.textAlign = 'center';
+    // 加上文字描邊，增加可讀性
+    ctx2.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx2.lineWidth = 2;
+    ctx2.strokeText(f.text, f.x, f.y);
+    ctx2.fillText(f.text, f.x, f.y);
+    ctx2.restore();
+    return true;
   });
 
   battleAnim.bg++;
@@ -758,7 +466,6 @@ function updateBattleLogic() {
       spawnFloat(`-${Math.round(e.atk*2)}`, currentStartX + 10 * currentPx, currentH * 0.5, "#f00"); // 修正城堡門口的渲染座標
       e.hp = 0; 
       updateBattleUI();
-      if (Dungeon.castleHp <= 0) endGame();
     }
   });
 
@@ -781,47 +488,6 @@ function updateBattleLogic() {
     endGame();
   }
 }
-
-// 此 endGame() 已被 js/dungeon.js 中的同名函數取代，故在此移除以避免衝突
-
-function triggerHitEffect(target, x, color){
-  if(target==="player"){
-    battleAnim.flash=0.1; battleAnim.flashColor="#ff0000";
-    for(let i=0;i<6;i++) battleAnim.particles.push({x:x,y:cvH*0.5,vx:(Math.random()-.5)*5,vy:-Math.random()*5,life:1,color:"#ff4040",size:2+Math.random()*2});
-  } else {
-    battleAnim.flash=0.1; battleAnim.flashColor = color || "#ffffff";
-    for(let i=0;i<6;i++) battleAnim.particles.push({x:x,y:cvH*0.5,vx:(Math.random()-.5)*6,vy:-Math.random()*6,life:1,color: color || ["#ffcc40","#ff8020","#ffffff"][i%3],size:2+Math.random()*2});
-  }
-}
-function triggerCritEffect(){
-  battleAnim.flash=0.42; battleAnim.flashColor="#ff8800";
-  for(let i=0;i<20;i++) battleAnim.particles.push({x:cvW*0.74,y:cvH*0.4,vx:(Math.random()-.5)*9,vy:-Math.random()*9,life:1,color:["#ff8000","#ffcc00","#ffffff","#ff4000"][i%4],size:3+Math.random()*5});
-}
-
-// renderTitleScreen 邏輯已整合至 renderBattleCanvas
-
-// 此 endGame() 已被 js/dungeon.js 中的同名函數取代，故在此移除以避免衝突
-
-function triggerHitEffect(target, x, color){
-  if(target==="player"){
-    battleAnim.flash=0.1; battleAnim.flashColor="#ff0000";
-    for(let i=0;i<6;i++) battleAnim.particles.push({x:x,y:cvH*0.5,vx:(Math.random()-.5)*5,vy:-Math.random()*5,life:1,color:"#ff4040",size:2+Math.random()*2});
-  } else {
-    battleAnim.flash=0.1; battleAnim.flashColor = color || "#ffffff";
-    for(let i=0;i<6;i++) battleAnim.particles.push({x:x,y:cvH*0.5,vx:(Math.random()-.5)*6,vy:-Math.random()*6,life:1,color: color || ["#ffcc40","#ff8020","#ffffff"][i%3],size:2+Math.random()*2});
-  }
-}
-function triggerCritEffect(){
-  battleAnim.flash=0.42; battleAnim.flashColor="#ff8800";
-  for(let i=0;i<20;i++) battleAnim.particles.push({x:cvW*0.74,y:cvH*0.4,vx:(Math.random()-.5)*9,vy:-Math.random()*9,life:1,color:["#ff8000","#ffcc00","#ffffff","#ff4000"][i%4],size:3+Math.random()*5});
-}
-
-// renderTitleScreen 邏輯已整合至 renderBattleCanvas
-
-
-
-
-// 此 endGame() 已被 js/dungeon.js 中的同名函數取代，故在此移除以避免衝突
 
 function triggerHitEffect(target, x, color){
   if(target==="player"){
@@ -866,24 +532,3 @@ if (typeof ETYMOLOGY_LEGENDS_TITLE === "undefined") {
 if (typeof renderBattleCanvas !== 'function') {
   window.renderBattleCanvas = renderBattleCanvas; // 將其暴露為全局函數
 }
-
-
-
-
-// 此 endGame() 已被 js/dungeon.js 中的同名函數取代，故在此移除以避免衝突
-
-function triggerHitEffect(target, x, color){
-  if(target==="player"){
-    battleAnim.flash=0.1; battleAnim.flashColor="#ff0000";
-    for(let i=0;i<6;i++) battleAnim.particles.push({x:x,y:cvH*0.5,vx:(Math.random()-.5)*5,vy:-Math.random()*5,life:1,color:"#ff4040",size:2+Math.random()*2});
-  } else {
-    battleAnim.flash=0.1; battleAnim.flashColor = color || "#ffffff";
-    for(let i=0;i<6;i++) battleAnim.particles.push({x:x,y:cvH*0.5,vx:(Math.random()-.5)*6,vy:-Math.random()*6,life:1,color: color || ["#ffcc40","#ff8020","#ffffff"][i%3],size:2+Math.random()*2});
-  }
-}
-function triggerCritEffect(){
-  battleAnim.flash=0.42; battleAnim.flashColor="#ff8800";
-  for(let i=0;i<20;i++) battleAnim.particles.push({x:cvW*0.74,y:cvH*0.4,vx:(Math.random()-.5)*9,vy:-Math.random()*9,life:1,color:["#ff8000","#ffcc00","#ffffff","#ff4000"][i%4],size:3+Math.random()*5});
-}
-
-// renderTitleScreen 邏輯已整合至 renderBattleCanvas

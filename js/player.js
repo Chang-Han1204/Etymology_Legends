@@ -4,71 +4,6 @@
 
 
 
-function getPlayerClass() {
-  // 獲取所有職業並依等級排序，預設等級為 1
-  const sortedClasses = Object.values(CLASSES).sort((a, b) => (a.lv || 1) - (b.lv || 1));
-  let c = sortedClasses[0]; // 預設為最低等級職業
-
-  for (const ci of sortedClasses) {
-    if (player.lv >= (ci.lv || 1)) c = ci;
-  }
-  return c;
-}
-
-function getMaxHp() {
-  const cls = getPlayerClass();
-  return (cls.baseHp || 100) + (player.lv - 1) * 20;
-}
-
-function getMaxMp() {
-  const cls = getPlayerClass();
-  return (cls.baseMp || 50) + (player.lv - 1) * 5;
-}
-
-function getAtk() {
-  const cls = getPlayerClass();
-  let atk = (player.baseAtk || cls.baseAtk || 10);
-  // 這裡可以加入其他加成邏輯
-  return atk;
-}
-
-function getDef() {
-  const cls = getPlayerClass();
-  let def = (player.baseDef || cls.baseDef || 5);
-  return def;
-}
-
-function getCrit() {
-  return 0.05 + (player.combo || 0) * 0.01;
-}
-
-// ══════════════════════════════════════════════
-// DAMAGE CALC
-// ══════════════════════════════════════════════
-function calculateDamage(isGrammar = false, isBoss = false) {
-  const atk = getAtk();
-  const eDef = currentEnemy ? currentEnemy.def : 0;
-  let dmg = Math.max(1, atk - Math.floor(eDef * 0.5));
-  if (isGrammar) {
-    dmg += Math.floor((gStats.correct || 0) / 10) * 2;
-  }
-  dmg += Math.floor((vStats.correct || 0) / 10);
-  if (player.combo >= 5) dmg = Math.round(dmg * 1.3);
-  let isCrit = false;
-  if (Math.random() < getCrit()) {
-    dmg = Math.round(dmg * 1.8);
-    isCrit = true;
-  }
-  return { dmg: Math.max(1, dmg), isCrit };
-}
-
-function calcEnemyDmg() {
-  if (!currentEnemy) return 0;
-  let d = Math.max(1, currentEnemy.atk - Math.floor(getDef() * 0.6));
-
-  return Math.max(1, d);
-}
-
 function gainExp(amt, x, y) {
   let total = amt;
   player.exp = (player.exp || 0) + total;
@@ -81,23 +16,12 @@ function gainExp(amt, x, y) {
     player.exp -= (player.expNext || 100);
     player.lv++;
     player.expNext = Math.round(100 * Math.pow(1.15, player.lv - 1));
-    player.baseAtk = (player.baseAtk || 10) + 2;
-    player.baseDef = (player.baseDef || 5) + 1;
-    const mhp = getMaxHp();
-    player.maxHp = mhp;
-    player.hp = Math.min((player.hp || 0) + 30, mhp);
-    dLog(`⭐ LEVEL UP! Lv.${player.lv} — ${getPlayerClass().name}`, "log-gold");
+    dLog(`⭐ LEVEL UP! Lv.${player.lv}`, "log-gold");
     sfxLevelUp();
     setTimeout(() => showLU(player.lv), 400);
   }
   updateStatusPanel();
   saveAll();
-}
-
-function revive() {
-  player.hp = Math.round(getMaxHp() * 0.5);
-  document.getElementById('dead-ov').classList.remove('show');
-  updateStatusPanel();
 }
 
 function newGame() {
@@ -127,9 +51,9 @@ function hardReset() {
 // LEVEL UP OVERLAY
 // ══════════════════════════════════════════════
 function showLU(lv) {
-  const cls = getPlayerClass();
   document.getElementById('lu-lv').textContent = 'Lv.' + lv;
-  document.getElementById('lu-cls').textContent = cls.sprite + ' ' + cls.name;
+  const luCls = document.getElementById('lu-cls');
+  if (luCls) luCls.textContent = '冒險等級提升！';
   document.getElementById('lu-ov').classList.add('show');
   spawnParticles();
 }
@@ -152,30 +76,28 @@ function spawnParticles() {
 }
 
 // ══════════════════════════════════════════════
-// DAMAGE FLOATS
+// DAMAGE FLOATS (REWRITTEN FOR CANVAS)
 // ══════════════════════════════════════════════
 function spawnFloat(text, x, y, color = 'var(--gold)') {
-  const wrap = document.querySelector('.battle-wrap');
-  if (!wrap) return;
-  const el = document.createElement('div');
-  el.className = 'dmg-float';
-  // 座標改為相對於 .battle-wrap，這能解決偏移問題
-  el.style.cssText = `left:${x}px; top:${y}px; color:${color}; position:absolute;`;
-  el.textContent = text;
-  wrap.appendChild(el);
-  setTimeout(() => el.remove(), 1300);
+  // 為了減少 DOM 操作提升效能，改為將數據推送到 battleAnim.floats 由 Canvas 渲染
+  if (typeof battleAnim !== 'undefined' && battleAnim.floats) {
+    battleAnim.floats.push({
+      text: text,
+      x: x,
+      y: y,
+      color: color.startsWith('var') ? '#f1c40f' : color, // 簡單處理 CSS 變數
+      life: 1.0,
+      size: text.includes('+') ? 14 : 12
+    });
+  }
 }
 
 // ══════════════════════════════════════════════
 // STATUS PANEL UPDATE
 // ══════════════════════════════════════════════
 function updateStatusPanel() {
-  const cls = getPlayerClass();
   const phudName = document.getElementById('phud-name');
   if (phudName) phudName.textContent = '冒險者';
-  
-  const phudClass = document.getElementById('phud-class');
-  if (phudClass) phudClass.textContent = cls.name;
   
   const plv = document.getElementById('plv');
   if (plv) plv.textContent = player.lv || 1;
@@ -250,35 +172,7 @@ function switchCharTab(tabName) {
 
 
 function updateEnemyHud() {
-  const ehudName = document.getElementById("ehud-name");
-  const ehudClass = document.getElementById("ehud-class");
-  const ehpBar = document.getElementById("ehp-bar");
-  const ehpVal = document.getElementById("ehp-val");
-  const eatk = document.getElementById("eatk");
-  const edef = document.getElementById("edef");
-
-  if (!currentEnemy) {
-    if (ehudName) ehudName.textContent = "??";
-    if (ehudClass) ehudClass.textContent = "—";
-    if (ehpBar) ehpBar.style.width = "100%";
-    if (ehpVal) ehpVal.textContent = "—";
-    if (eatk) eatk.textContent = "—";
-    if (edef) edef.textContent = "—";
-    return;
-  }
-  
-  const pct = clamp(currentEnemy.hp / currentEnemy.maxHp * 100, 0, 100);
-  if (ehpBar) {
-    ehpBar.style.width = pct + "%";
-    if (pct < 30) ehpBar.classList.add("low");
-    else ehpBar.classList.remove("low");
-  }
-  
-  if (ehudName) ehudName.textContent = currentEnemy.name;
-  if (ehudClass) ehudClass.textContent = currentEnemy.class || "";
-  if (ehpVal) ehpVal.textContent = currentEnemy.hp + "/" + currentEnemy.maxHp;
-  if (eatk) eatk.textContent = currentEnemy.atk;
-  if (edef) edef.textContent = currentEnemy.def;
+  // 目前僅顯示剩餘敵方波次資訊，不再顯示單體敵人詳細數值
 }
 
 function updateDungeonBar() {

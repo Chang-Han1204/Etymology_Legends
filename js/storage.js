@@ -7,7 +7,7 @@
 // ── 全域變數宣告（必須在此處宣告，其他檔案才能存取）──
 var vWords     = [];
 var gQuestions = [];
-// var ITEMS      = {}; // 移除 ITEMS 宣告
+var gUsedIds   = []; // 已出過的題目 ID
 var vStats     = { correct: 0, wrong: 0, ws: {} };
 var gStats     = { correct: 0, wrong: 0, ws: {} };
 var player     = null; // 由 initStorage 初始化
@@ -15,25 +15,20 @@ var player     = null; // 由 initStorage 初始化
 // ── 預設玩家資料 ──
 const DEFAULT_PLAYER = {
   lv: 1, exp: 0, expNext: 100, floor: 1, totalFloors: 1,
-  hp: 100, maxHp: 100, // 移除 mp, maxMp
+  hp: 100, maxHp: 100,
   baseAtk: 10, baseDef: 5, critRate: 0.05,
   combo: 0, maxCombo: 0, wrongStreak: 0,
-  // inventory: [], equip: { weapon: null, armor: null }, // 移除 inventory, equip
-  // relics: [], // 移除 relics
   stats: { 
     vocabKills: 0, grammarKills: 0, bossKills: 0,
     totalWaves: 0, totalCorrect: 0, totalWrong: 0,
     maxCombo: 0, totalGemsEarned: 0,
-    typeStats: {}, // 按題型統計 { logic_grammar: { c: 0, w: 0 }, ... }
-    elementStats: { Water: 0, Fire: 0, Earth: 0 } // 按屬性召喚次數
+    typeStats: {}, 
+    elementStats: { Water: 0, Fire: 0, Earth: 0 }
   },
-  _bonusMaxHp: 0, // 移除 _bonusMaxMp
-  protectedByPhoenix: false, // 移除 mpSkillCooldown
+  _bonusMaxHp: 0,
+  protectedByPhoenix: false,
   gems: 0,
-  upgrades: {
-    // 儲存每個士兵種類的強化等級
-    // 屬性改為 atk, hp, elem (屬性強度)
-  },
+  upgrades: {},
 };
 
 const DEFAULT_VSTATS = { correct: 0, wrong: 0, ws: {} };
@@ -44,6 +39,7 @@ const LS_KEYS = {
   player: 'lc2_player',
   vstats:  'lc2_vstats',
   gstats:  'lc2_gstats',
+  used_ids: 'lc2_used_ids',
 };
 
 // ── 伺服器靜態檔案路徑 ──
@@ -81,7 +77,7 @@ function parseCSV(text) {
         inQuotes = true;
         i++;
       } else if (char === ',') {
-        currentRow.push(currentField); // Keep raw content including spaces
+        currentRow.push(currentField);
         currentField = '';
         i++;
       } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
@@ -111,8 +107,6 @@ function parseCSV(text) {
     if (values.length < headers.length) continue;
     const obj = {};
     headers.forEach((header, index) => {
-      // Trim only for certain columns, or globally if preferred.
-      // Here we trim values as CSV standard often ignores leading/trailing spaces outside quotes.
       obj[header] = (values[index] || '').trim();
     });
     result.push(obj);
@@ -120,7 +114,6 @@ function parseCSV(text) {
   return result;
 }
 
-// Keep only one definition for parseGrammarOptions
 function parseGrammarOptions(optionsStr) {
   if (!optionsStr) return [];
   return optionsStr.split("|").map(opt => opt.trim());
@@ -131,25 +124,10 @@ function parseGrammarAnswer(answerStr) {
   return isNaN(num) ? 0 : num;
 }
 
-function parseEffect(effectStr) {
-  if (!effectStr) return {};
-  const cleanStr = effectStr.replace(/"/g, '');
-  const effects = {};
-  cleanStr.split('|').forEach(effect => {
-    const [key, value] = effect.split(':');
-    if (key && value !== undefined) {
-      const numValue = parseFloat(value.trim());
-      effects[key.trim()] = isNaN(numValue) ? value.trim() : numValue;
-    }
-  });
-  return effects;
-}
-
 // ══════════════════════════════════════════════
 // 從伺服器載入靜態資料（唯讀）
 // ══════════════════════════════════════════════
 async function fetchVocab() {
-  // Vocab 功能已併入 Grammar
   return [];
 }
 
@@ -202,12 +180,17 @@ function saveGStatsToLS() {
   catch (e) {}
 }
 
-// saveAll：統一儲存介面（全專案呼叫此函數）
+function saveUsedIdsToLS() {
+  try { localStorage.setItem(LS_KEYS.used_ids, JSON.stringify(gUsedIds)); }
+  catch (e) {}
+}
+
 function saveAll() {
   console.log('[Storage] 儲存所有資料至 localStorage...');
   savePlayerToLS();
   saveVStatsToLS();
   saveGStatsToLS();
+  saveUsedIdsToLS();
 }
 
 // ══════════════════════════════════════════════
@@ -216,7 +199,6 @@ function saveAll() {
 function ensurePlayerIntegrity() {
   Object.keys(DEFAULT_PLAYER).forEach(key => {
     if (!(key in player) || player[key] === undefined || player[key] === null) {
-      // 跳過物件型態，避免覆蓋
       if (typeof DEFAULT_PLAYER[key] === 'object' && !Array.isArray(DEFAULT_PLAYER[key])) {
         if (!player[key]) player[key] = JSON.parse(JSON.stringify(DEFAULT_PLAYER[key]));
       } else if (Array.isArray(DEFAULT_PLAYER[key])) {
@@ -228,7 +210,6 @@ function ensurePlayerIntegrity() {
   });
 
   if (!player.stats) player.stats = { vocabKills: 0, grammarKills: 0, bossKills: 0 };
-  // 補齊新統計欄位
   if (player.stats.totalWaves === undefined) player.stats.totalWaves = 0;
   if (player.stats.totalCorrect === undefined) player.stats.totalCorrect = 0;
   if (player.stats.totalWrong === undefined) player.stats.totalWrong = 0;
@@ -238,7 +219,6 @@ function ensurePlayerIntegrity() {
   if (!player.stats.elementStats) player.stats.elementStats = { Water: 0, Fire: 0, Earth: 0 };
 
   if (!player.expNext) player.expNext = Math.round(100 * Math.pow(1.15, (player.lv || 1) - 1));
-  // baseAtk / baseDef：兼容舊存檔（舊版用 atk/def）
   if (!player.baseAtk) player.baseAtk = player.atk || DEFAULT_PLAYER.baseAtk;
   if (!player.baseDef) player.baseDef = player.def || DEFAULT_PLAYER.baseDef;
 }
@@ -249,33 +229,25 @@ function ensurePlayerIntegrity() {
 async function initStorage() {
   console.log('[Storage] 開始載入...');
 
-  // 平行載入題庫（加速啟動）
   const [vocabData, grammarData] = await Promise.all([
     fetchVocab(),
     fetchGrammar(),
-    // fetchItems(), // 移除 fetchItems 呼叫
   ]);
 
   vWords     = vocabData;
   gQuestions = grammarData;
-  // ITEMS      = itemsData; // 移除 ITEMS 賦值
 
   console.log(`[Storage] 詞彙庫: ${vWords.length} 筆`);
   console.log(`[Storage] 文法題庫: ${gQuestions.length} 筆`);
-  // console.log(`[Storage] 道具: ${Object.keys(ITEMS).length} 種`); // 移除道具數量日誌
 
-  // 從 localStorage 載入玩家進度
   const savedPlayer = loadPlayerFromLS();
   if (savedPlayer) {
     player = savedPlayer;
-    console.log(`[Storage] 玩家存檔：Lv.${player.lv}，第 ${player.floor} 層`);
   } else {
     player = JSON.parse(JSON.stringify(DEFAULT_PLAYER));
-    console.log('[Storage] 無存檔，使用新玩家');
   }
   ensurePlayerIntegrity();
 
-  // 從 localStorage 載入統計
   try {
     const rawV = localStorage.getItem(LS_KEYS.vstats);
     vStats = rawV ? JSON.parse(rawV) : { ...DEFAULT_VSTATS };
@@ -286,20 +258,24 @@ async function initStorage() {
     gStats = rawG ? JSON.parse(rawG) : { ...DEFAULT_GSTATS };
   } catch (e) { gStats = { ...DEFAULT_GSTATS }; }
 
-  // 載入完成提示
+  try {
+    const rawU = localStorage.getItem(LS_KEYS.used_ids);
+    gUsedIds = rawU ? JSON.parse(rawU) : [];
+  } catch (e) { gUsedIds = []; }
+
   setTimeout(() => {
     if (typeof toast === 'function') {
       if (gQuestions.length > 0) {
         toast(`📚 題庫載入完成：${gQuestions.length} 道題目`, 'var(--green)');
       } else {
-        toast('⚠️ 題庫載入失敗，請確認 data/ 資料夾與 CSV 檔案存在', 'var(--red)');
+        toast('⚠️ 題庫載入失敗', 'var(--red)');
       }
     }
   }, 300);
 }
 
 // ══════════════════════════════════════════════
-// 匯出 / 重置（供 interface.js 使用）
+// 匯出 / 重置
 // ══════════════════════════════════════════════
 function exportData(type) {
   let data, title, fname;
@@ -307,8 +283,8 @@ function exportData(type) {
     data = vWords; title = '匯出單字庫'; fname = 'lexicon2_words.json';
   } else if (type === 'grammar') {
     data = gQuestions; title = '匯出文法題庫'; fname = 'lexicon2_grammar.json';
-  } else { // 移除 else if (type === 'items')
-    data = { words: vWords, grammar: gQuestions, vstats: vStats, gstats: gStats, player }; // 移除 items: ITEMS
+  } else {
+    data = { words: vWords, grammar: gQuestions, vstats: vStats, gstats: gStats, player, used_ids: gUsedIds };
     title = '完整備份'; fname = 'lexicon2_backup.json';
   }
   const exportTtl = document.getElementById('export-ttl');
@@ -325,48 +301,26 @@ function resetData() {
   localStorage.removeItem(LS_KEYS.player);
   localStorage.removeItem(LS_KEYS.vstats);
   localStorage.removeItem(LS_KEYS.gstats);
+  localStorage.removeItem(LS_KEYS.used_ids);
   player = JSON.parse(JSON.stringify(DEFAULT_PLAYER));
   ensurePlayerIntegrity();
   vStats = { ...DEFAULT_VSTATS };
   gStats = { ...DEFAULT_GSTATS };
+  gUsedIds = [];
   if (typeof updateStatusPanel  === 'function') updateStatusPanel();
-  // if (typeof renderInventory    === 'function') renderInventory(); // 移除 renderInventory 呼叫
   if (typeof renderDataPanel    === 'function') renderDataPanel();
   if (typeof updateDungeonBar   === 'function') updateDungeonBar();
   if (typeof updateEnemyHud     === 'function') updateEnemyHud();
   if (typeof toast === 'function') toast('✅ 已重置', 'var(--gold)');
 }
 
-// ══════════════════════════════════════════════
-// 兼容性函數（避免其他模組呼叫時出錯）
-// ══════════════════════════════════════════════
-
-// saveJSONFile：舊程式碼呼叫時不再觸發下載，改為 localStorage
 function saveJSONFile(path, data) {
   if (path.includes('player')) savePlayerToLS();
   else if (path.includes('vstats')) saveVStatsToLS();
   else if (path.includes('gstats')) saveGStatsToLS();
-  // vocab / grammar / items 是唯讀題庫，不需要儲存
   return Promise.resolve(true);
 }
 
-// loadLS / saveLS（utils.js 也有定義，以 utils.js 為主；此處備用）
-if (typeof loadLS === 'undefined') {
-  function loadLS(key, def) {
-    try {
-      const r = localStorage.getItem(key);
-      if (r) return JSON.parse(r);
-    } catch (e) {}
-    return typeof def === 'function' ? def() : (def !== undefined ? JSON.parse(JSON.stringify(def)) : null);
-  }
-}
-if (typeof saveLS === 'undefined') {
-  function saveLS(key, data) {
-    try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
-  }
-}
-
-// ── 啟動 ──
 initStorage().then(() => {
   if (typeof onStorageReady === 'function') {
     onStorageReady();
