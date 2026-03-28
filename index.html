@@ -34,7 +34,12 @@
   <!-- BATTLE CANVAS -->
   <div class="battle-wrap">
     <canvas id="battle-canvas"></canvas>
-    <div class="battle-ui"></div>
+    <div class="battle-ui">
+      <div id="castle-hp-bar" class="hp-bar-wrap">
+        <div class="hp-bar-fill" id="php-bar"></div>
+        <div class="hp-bar-text" id="php-val"></div>
+      </div>
+    </div>
   </div>
 
   <!-- DUNGEON INFO BAR -->
@@ -222,10 +227,10 @@
             </div>
             <div class="stat-mini-box">
               <div class="stat-mini-lbl">💔 答錯懲罰</div>
-              <div class="stat-mini-val" id="detail-penalty">0</div>
+              <div class="stat-mini-val" id="detail-penalty">10</div>
             </div>
           </div>
-          <p style="margin-bottom:5px">💡 <strong style="color:var(--gold2)">成長機制：</strong>領主等級越高，答對英文題目時獲得的金幣就越多（50 + 等級×5），讓您能更快速召喚強力單位。然而，答錯時主堡受到的傷害也會隨等級提升（20 + 等級×5）。</p>
+          <p style="margin-bottom:5px">💡 <strong style="color:var(--gold2)">成長機制：</strong>領主等級越高，答對英文題目時獲得的金幣就越多（50 + 等級×5），讓您能更快速召喚強力單位。然而，答錯時主堡受到的傷害將固定為 10 點。</p>
           <p>🛡️ <strong style="color:var(--cyan2)">守護城堡：</strong>妥善利用金幣召喚不同屬性的士兵。地、水、火三屬性間存在克制關係，正確的戰略佈署才是獲勝關鍵。</p>
         </div>
       </div>

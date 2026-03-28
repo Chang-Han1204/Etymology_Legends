@@ -19,7 +19,7 @@ function renderDataPanel() {
   if (dLv) dLv.textContent = player.lv || 1;
   if (dExp) dExp.textContent = `${player.exp || 0} / ${player.expNext || 100}`;
   if (dReward) dReward.textContent = `💰 ${50 + (player.lv || 1) * 5}`;
-  if (dPenalty) dPenalty.textContent = `💔 ${20 + (player.lv || 1) * 5}`;
+  if (dPenalty) dPenalty.textContent = `💔 ${10}`;
 
   // 詳細統計
   const container = document.getElementById('new-stats-container');
