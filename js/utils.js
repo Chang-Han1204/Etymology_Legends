@@ -15,6 +15,10 @@ function shuffle(a) {
 }
 
 function speak(w) {
+  if (typeof speakGrammarSentence === 'function') {
+    speakGrammarSentence(w);
+    return;
+  }
   if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(w);

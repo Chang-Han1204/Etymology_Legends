@@ -571,7 +571,11 @@ function selDQ(btn, type, sel, cor, evt) {
     }
     if (sentenceToSpeak && sentenceToSpeak.trim() !== "") {
       console.log(`[語音播放] 播放內容: "${sentenceToSpeak}"`);
-      speak(sentenceToSpeak);
+      if (typeof speakGrammarSentence === 'function') {
+        speakGrammarSentence(sentenceToSpeak);
+      } else {
+        speak(sentenceToSpeak);
+      }
     }
   }
 }
