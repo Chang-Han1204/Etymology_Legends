@@ -344,11 +344,15 @@ body::after {
 
 /* 召喚按鈕專用優化 */
 .summon-btn {
-  padding: 6px 4px !important;
-  font-size: 11px !important;
-  line-height: 1.2 !important;
-  flex: 1 1 22%; /* 讓按鈕在寬度足夠時自動分配空間 */
-  min-width: 75px !important;
+  padding: 4px 2px !important;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  flex: 1 1 23%; /* 稍微增加寬度佔比，嘗試每行 4 個 */
+  min-width: 65px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .summon-btn .el-icon {
@@ -902,6 +906,14 @@ select option { background:var(--panel); }
   .inv-grid { grid-template-columns:repeat(4,1fr); }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
   .main-tab { font-size:5px; padding:8px 4px; }
+  
+  /* 召喚按鈕在手機版更進一步縮小 */
+  .summon-btn {
+    flex: 1 1 30% !important; /* 手機版每行顯示 3 個 */
+    min-width: 60px !important;
+    font-size: 9px !important;
+    padding: 3px 1px !important;
+  }
 }
 
 /* ══════════════
