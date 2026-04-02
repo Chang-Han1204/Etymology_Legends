@@ -112,43 +112,60 @@
       <!-- Summon Interface -->
       <div class="card" style="margin-bottom:8px; padding:8px">
         <div class="q-head" style="margin-bottom:5px">🛡️ 召喚士兵</div>
-        <div class="btn-row" style="justify-content:space-around; gap: 4px;">
-          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士 (T1): 地屬性，基礎近戰">
-            🗡️ 戰士 ($100)<br><span class="el-icon">🌿</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-rock_thrower" onclick="summonSoldier('rock_thrower')" title="投石者 (T2): 地屬性，遠程攻擊">
-            🪨 投石 ($250)<br><span class="el-icon">🌿</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士 (T3): 地屬性，高生命坦克">
-            🛡️ 聖騎 ($450)<br><span class="el-icon">🌿</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-hero" onclick="summonSoldier('hero')" title="大地英雄 (T4): 地屬性，終極單位">
-            ✨ 英雄 ($750)<br><span class="el-icon">🌿</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手 (T1): 水屬性，遠程射手">
-            🏹 弓手 ($100)<br><span class="el-icon">💧</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客 (T2): 水屬性，高速爆發">
-            🔪 刺客 ($250)<br><span class="el-icon">💧</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客 (T3): 水屬性，快速近戰">
-            👻 幽靈 ($450)<br><span class="el-icon">💧</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="大主祭 (T4): 水屬性，遠程高傷">
-            ⚕️ 主祭 ($750)<br><span class="el-icon">💧</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師 (T1): 火屬性，遠程魔法">
-            🧙 魔法 ($100)<br><span class="el-icon">🔥</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神 (T2): 火屬性，近戰收割">
-            💀 死神 ($250)<br><span class="el-icon">🔥</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-knight" onclick="summonSoldier('knight')" title="烈焰騎士 (T3): 火屬性，攻防一體">
-            🐎 騎士 ($450)<br><span class="el-icon">🔥</span>
-          </button>
-          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主 (T4): 火屬性，終極破壞">
-            🐉 龍領 ($750)<br><span class="el-icon">🔥</span>
-          </button>
+        <div class="summon-groups">
+          <div class="summon-group el-earth">
+            <div class="group-label">🌿 地屬性士兵</div>
+            <div class="btn-row">
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士 (T1): 地屬性，基礎近戰">
+                🗡️ 戰士 ($100)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-rock_thrower" onclick="summonSoldier('rock_thrower')" title="投石者 (T2): 地屬性，遠程攻擊">
+                🪨 投石 ($250)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士 (T3): 地屬性，高生命坦克">
+                🛡️ 聖騎 ($450)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-hero" onclick="summonSoldier('hero')" title="大地英雄 (T4): 地屬性，終極單位">
+                ✨ 英雄 ($750)
+              </button>
+            </div>
+          </div>
+          
+          <div class="summon-group el-water">
+            <div class="group-label">💧 水屬性士兵</div>
+            <div class="btn-row">
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手 (T1): 水屬性，遠程射手">
+                🏹 弓手 ($100)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客 (T2): 水屬性，高速爆發">
+                🔪 刺客 ($250)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客 (T3): 水屬性，快速近戰">
+                👻 幽靈 ($450)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="大主祭 (T4): 水屬性，遠程高傷">
+                ⚕️ 主祭 ($750)
+              </button>
+            </div>
+          </div>
+          
+          <div class="summon-group el-fire">
+            <div class="group-label">🔥 火屬性士兵</div>
+            <div class="btn-row">
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師 (T1): 火屬性，遠程魔法">
+                🧙 魔法 ($100)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神 (T2): 火屬性，近戰收割">
+                💀 死神 ($250)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-knight" onclick="summonSoldier('knight')" title="烈焰騎士 (T3): 火屬性，攻防一體">
+                🐎 騎士 ($450)
+              </button>
+              <button class="btn btn-sm btn-gray summon-btn" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主 (T4): 火屬性，終極破壞">
+                🐉 龍領 ($750)
+              </button>
+            </div>
+          </div>
         </div>
         <div class="element-hint">
           剋制：💧 > 🔥 > 🌿 > 💧 (傷害 200% / 50%)

@@ -343,24 +343,47 @@ body::after {
 }
 
 /* 召喚按鈕專用優化 */
-.summon-btn {
-  padding: 4px 2px !important;
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-  flex: 1 1 22%; /* 預設每行約 4 個 */
-  min-width: 70px !important;
+.summon-groups {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  word-break: break-word; /* 允許單字內換行防止溢出 */
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.summon-btn .el-icon {
-  font-size: 12px;
-  display: inline-block;
-  margin-top: 2px;
+.summon-group {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.group-label {
+  font-family: var(--font-px);
+  font-size: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summon-group.el-earth .group-label { color: var(--green2); }
+.summon-group.el-water .group-label { color: var(--blue2); }
+.summon-group.el-fire .group-label  { color: var(--red2); }
+
+.summon-btn {
+  width: 100% !important;
+  padding: 10px 12px !important;
+  font-size: 13px !important; /* 增大字體，在單欄模式下更好讀 */
+  line-height: 1.2 !important;
+  display: flex !important;
+  flex-direction: row !important; /* 水平排列：[圖示+名稱] [價格] */
+  align-items: center !important;
+  justify-content: space-between !important;
+  text-align: left !important;
+  margin-bottom: 4px;
+  gap: 8px;
 }
 
 .element-hint {
@@ -909,13 +932,35 @@ select option { background:var(--panel); }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
   .main-tab { font-size:5px; padding:8px 4px; }
   
-  /* 召喚按鈕在手機版調整為每行 2 個，以騰出足夠空間顯示文字 */
+  /* 手機版召喚按鈕完全單欄化，確保文字空間充足 */
   .summon-btn {
-    flex: 1 1 46% !important; 
-    min-width: 100px !important;
-    font-size: 11px !important; /* 寬度增加後字體可以稍微調大，反而更好讀 */
-    padding: 6px 4px !important;
-    margin-bottom: 4px;
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+  }
+  
+  .summon-groups {
+    gap: 8px;
+  }
+}
+
+/* 電腦版寬螢幕優化：讓三個屬性分組並排顯示 */
+@media(min-width:600px){
+  .summon-groups {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .summon-group {
+    flex: 1;
+    min-width: 0;
+  }
+  .summon-btn {
+    font-size: 11px !important;
+    padding: 8px 6px !important;
+    flex-direction: column !important; /* 電腦版較寬，可以回歸垂直排列節省高度 */
+    text-align: center !important;
+    justify-content: center !important;
+    height: 60px;
   }
 }
 
