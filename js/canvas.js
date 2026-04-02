@@ -409,14 +409,34 @@ function updateBattleLogic() {
         }
         
         nearestEnemy.hp -= finalAtk;
-        
+
         // 浮動文字位置需轉換為畫布座標
         const currentW = cvW, currentH = cvH;
         const currentSpec = ETYMOLOGY_LEGENDS_TITLE;
         const currentPx = Math.min(currentW / 120, currentH / currentSpec.pixels.length);
         const currentStartX = (currentW - 120 * currentPx) / 2;
         const currentGroundRow = 18; // 使用正確的 groundRow
-        const currentGY = (currentH - currentSpec.pixels.length * currentPx) / 2 + currentGroundRow * currentPx; 
+        const currentGY = (currentH - currentSpec.pixels.length * currentPx) / 2 + currentGroundRow * currentPx;
+
+        // Apply Stun effect
+        if (s.stunChance && Math.random() < s.stunChance) {
+          nearestEnemy.stunTimer = (nearestEnemy.stunTimer || 0) + s.stunDuration;
+          spawnFloat(`💫 Stunned!`, currentStartX + nearestEnemy.x * currentPx, currentGY - 60, "#f1c40f");
+        }
+
+        // Apply Splash damage
+        if (s.splashRange && s.splashDamage) {
+          Dungeon.enemies.forEach(e => {
+            if (e !== nearestEnemy) {
+              const dist = Math.abs(e.x - nearestEnemy.x);
+              if (dist <= s.splashRange) {
+                const splashDmg = finalAtk * s.splashDamage;
+                e.hp -= splashDmg;
+                spawnFloat(`-${Math.round(splashDmg)}`, currentStartX + e.x * currentPx, currentGY - 30, "#ff8000");
+              }
+            }
+          });
+        }
 
         if (effectMsg) spawnFloat(effectMsg, currentStartX + nearestEnemy.x * currentPx, currentGY - 60, effectColor);
 
@@ -431,6 +451,39 @@ function updateBattleLogic() {
         const hitColor = s.element ? ELEMENTS[s.element.toUpperCase()].color : "#ffffff";
         triggerHitEffect("enemy", currentStartX + nearestEnemy.x * currentPx, hitColor);
         s.atkTimer = 0;
+      }
+
+      // Apply Healing logic for Cleric
+      if (s.healAmount && s.healRange) {
+        s.healTimer = (s.healTimer || 0) + 1;
+        if (s.healTimer >= (s.healCooldown || 120)) {
+          let targetToHeal = null;
+          let lowestHpRatio = 1.0;
+
+          Dungeon.soldiers.forEach(other => {
+            const dist = Math.abs(other.x - s.x);
+            if (dist <= s.healRange) {
+              const hpRatio = other.hp / other.maxHp;
+              if (hpRatio < 1.0 && hpRatio < lowestHpRatio) {
+                lowestHpRatio = hpRatio;
+                targetToHeal = other;
+              }
+            }
+          });
+
+          if (targetToHeal) {
+            targetToHeal.hp = Math.min(targetToHeal.maxHp, targetToHeal.hp + s.healAmount);
+            
+            const currentW = cvW, currentH = cvH;
+            const currentSpec = ETYMOLOGY_LEGENDS_TITLE;
+            const currentPx = Math.min(currentW / 120, currentH / currentSpec.pixels.length);
+            const currentStartX = (currentW - 120 * currentPx) / 2;
+            const drawX = currentStartX + targetToHeal.x * currentPx;
+
+            spawnFloat(`+${s.healAmount}HP`, drawX, currentH * 0.5 - 20, "#4cbc4c");
+            s.healTimer = 0;
+          }
+        }
       }
     } else {
       s.state = "move";
@@ -454,6 +507,12 @@ function updateBattleLogic() {
 
   // 敵人移動與戰鬥
   Dungeon.enemies.forEach((e) => {
+    // Handle Stun
+    if (e.stunTimer > 0) {
+      e.stunTimer--;
+      return; // Skip action if stunned
+    }
+
     let nearestSoldier = null;
     let minDist = 6; // 攻擊距離 (邏輯像素單位)
     
@@ -467,20 +526,32 @@ function updateBattleLogic() {
 
     if (nearestSoldier) {
       e.atkTimer = (e.atkTimer || 0) + 1;
-      if (e.atkTimer > 70) {
-        nearestSoldier.hp -= e.atk; 
-        
-        // 浮動文字位置需轉換為畫布座標
-        const currentW = cvW, currentH = cvH;
-        const currentSpec = ETYMOLOGY_LEGENDS_TITLE;
-        const currentPx = Math.min(currentW / 120, currentH / currentSpec.pixels.length);
-        const currentStartX = (currentW - 120 * currentPx) / 2;
-        const drawX = currentStartX + nearestSoldier.x * currentPx; // 將邏輯座標轉換為渲染座標
+        if (e.atkTimer > 70) {
+          let damage = e.atk;
+          let blocked = false;
 
-        spawnFloat(`-${e.atk}`, drawX, currentH * 0.5, "#f00");
-        triggerHitEffect("player", drawX);
-        e.atkTimer = 0;
-      }
+          // Check for block chance
+          if (nearestSoldier.blockChance && Math.random() < nearestSoldier.blockChance) {
+            damage *= (1 - nearestSoldier.blockReduction);
+            blocked = true;
+          }
+
+          nearestSoldier.hp -= damage; // Apply damage (potentially reduced)
+
+          // Floating text position needs to be converted to canvas coordinates
+          const currentW = cvW, currentH = cvH;
+          const currentSpec = ETYMOLOGY_LEGENDS_TITLE;
+          const currentPx = Math.min(currentW / 120, currentH / currentSpec.pixels.length);
+          const currentStartX = (currentW - 120 * currentPx) / 2;
+          const drawX = currentStartX + nearestSoldier.x * currentPx; // 將邏輯座標轉換為渲染座標
+
+          if (blocked) {
+            spawnFloat(`🛡️ Blocked!`, drawX, currentH * 0.5 - 20, "#00ffff"); // Display block message
+          }
+          spawnFloat(`-${Math.round(damage)}`, drawX, currentH * 0.5, "#f00");
+          triggerHitEffect("player", drawX);
+          e.atkTimer = 0;
+        }
     } else if (e.x > 10) { // 城堡門口微調為邏輯座標 10，確保視覺與邏輯平衡
       e.x -= e.speed;
     } else {

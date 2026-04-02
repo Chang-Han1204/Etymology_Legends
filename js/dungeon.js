@@ -14,7 +14,9 @@ const Dungeon = {
   waveSpawnTimer: 0,
   enemiesToSpawn: 0,
   waveTimer: 0, // 波次倒數計時（秒）
-  isBossWave: false // 新增 Boss 波次狀態
+  isBossWave: false, // 新增 Boss 波次狀態
+  wrongQueue: [], // 答錯的題目佇列 { question, waitCount }
+  currentQ: null // 當前正在回答的題目
 };
 
 // Boss 宣告標記，防止重複執行
@@ -31,20 +33,20 @@ const UNIT_TYPES = {
   // --- Earth (地屬性) ---
   warrior:     { name: '戰士', cost: 100, hp: 100, atk: 20, speed: 0.15, sprite: 'player', range: 10, element: 'Earth', elem_strength: 1.0 },
   rock_thrower:{ name: '投石者', cost: 250, hp: 200, atk: 50, speed: 0.1, sprite: 'skeleton', range: 30, element: 'Earth', elem_strength: 1.0 }, // 提升 HP, ATK, Range
-  paladin:     { name: '聖騎士', cost: 450, hp: 600, atk: 80, speed: 0.15, sprite: 'paladin', range: 15, element: 'Earth', elem_strength: 1.0 }, // 提升 HP, ATK, Range
-  hero:        { name: '大地英雄', cost: 750, hp: 1200, atk: 180, speed: 0.2, sprite: 'hero', range: 20, element: 'Earth', elem_strength: 1.0 }, // 提升 HP, ATK, Range
+  paladin:     { name: '聖騎士', cost: 450, hp: 600, atk: 80, speed: 0.15, sprite: 'paladin', range: 15, element: 'Earth', elem_strength: 1.0, blockChance: 0.3, blockReduction: 0.5 }, // 提升 HP, ATK, Range, 增加格擋能力
+  hero:        { name: '大地英雄', cost: 750, hp: 1200, atk: 180, speed: 0.2, sprite: 'hero', range: 20, element: 'Earth', elem_strength: 1.0, stunChance: 0.2, stunDuration: 60 }, // 提升 HP, ATK, Range, 增加暈眩能力
 
   // --- Water (水屬性) ---
   archer:      { name: '弓箭手', cost: 100, hp: 70, atk: 18, speed: 0.1, sprite: 'archer', range: 25, element: 'Water', elem_strength: 1.0 }, // 微幅提升 ATK, Range
   assassin:    { name: '刺客', cost: 250, hp: 180, atk: 70, speed: 0.3, sprite: 'assassin', range: 12, element: 'Water', elem_strength: 1.0 }, // 提升 HP, ATK, Speed
   ghost:       { name: '幽靈刺客', cost: 450, hp: 400, atk: 100, speed: 0.3, sprite: 'ghost', range: 18, element: 'Water', elem_strength: 1.0 }, // 提升 HP, ATK, Speed, Range
-  cleric:      { name: '大主祭', cost: 750, hp: 700, atk: 140, speed: 0.1, sprite: 'cleric', range: 28, element: 'Water', elem_strength: 1.0 }, // 提升 HP, ATK, Range
+  cleric:      { name: '大主祭', cost: 750, hp: 700, atk: 140, speed: 0.1, sprite: 'cleric', range: 28, element: 'Water', elem_strength: 1.0, healRange: 50, healAmount: 20, healCooldown: 120 }, // 提升 HP, ATK, Range, 增加治療能力
 
   // --- Fire (火屬性) ---
   mage:        { name: '魔法師', cost: 100, hp: 60, atk: 28, speed: 0.1, sprite: 'mage', range: 28, element: 'Fire', elem_strength: 1.0 }, // 提升 ATK, Range
   reaper:      { name: '死神', cost: 250, hp: 250, atk: 65, speed: 0.2, sprite: 'reaper', range: 10, element: 'Fire', elem_strength: 1.0 }, // 提升 HP, ATK
-  knight:      { name: '烈焰騎士', cost: 450, hp: 550, atk: 95, speed: 0.2, sprite: 'boss', range: 15, element: 'Fire', elem_strength: 1.0 }, // 提升 HP, ATK, Range
-  dragonlord:  { name: '龍領主', cost: 750, hp: 1100, atk: 200, speed: 0.2, sprite: 'dragon', range: 20, element: 'Fire', elem_strength: 1.0 }  // 提升 HP, ATK, Range
+  knight:      { name: '烈焰騎士', cost: 450, hp: 550, atk: 95, speed: 0.2, sprite: 'boss', range: 15, element: 'Fire', elem_strength: 1.0, blockChance: 0.3, blockReduction: 0.5 }, // 提升 HP, ATK, Range, 增加格擋能力
+  dragonlord:  { name: '龍領主', cost: 750, hp: 1100, atk: 200, speed: 0.2, sprite: 'dragon', range: 20, element: 'Fire', elem_strength: 1.0, splashRange: 15, splashDamage: 0.5 }  // 提升 HP, ATK, Range, 增加濺射傷害
 };
 
 // 敵人單位類型定義（使用 canvas.js 中現有但未被士兵使用的 sprite）
@@ -179,9 +181,30 @@ function buildPools() {
 }
 
 function nextGrammarQ() {
+  // 優先從錯誤佇列中檢查
+  if (Dungeon.wrongQueue && Dungeon.wrongQueue.length > 0) {
+    // 檢查是否有題目已經等待足夠次數 (waitCount <= 0)
+    const reviewIdx = Dungeon.wrongQueue.findIndex(item => item.waitCount <= 0);
+    if (reviewIdx !== -1) {
+      const reviewItem = Dungeon.wrongQueue.splice(reviewIdx, 1)[0];
+      console.log(`[Dungeon] 重新出現複習題目: ${reviewItem.question.id}`);
+      // 標記為複習題，可以在 UI 上做特殊顯示
+      const q = { ...reviewItem.question, isReview: true };
+      
+      // 同時減少佇列中其他題目的等待計數
+      Dungeon.wrongQueue.forEach(item => item.waitCount--);
+      return q;
+    }
+  }
+
   if (!gPool.length) {
     buildPools(); // 嘗試重新建立
     if (!gPool.length) return null;
+  }
+
+  // 減少錯誤佇列中題目的等待計數
+  if (Dungeon.wrongQueue) {
+    Dungeon.wrongQueue.forEach(item => item.waitCount--);
   }
 
   const q = gPool[gIdx];
@@ -215,6 +238,8 @@ function resetDungeonState() {
   Dungeon.correctCount = 0;
   Dungeon.isWaveActive = false;
   Dungeon.isBossWave = false;
+  Dungeon.wrongQueue = [];
+  Dungeon.currentQ = null;
   dQTot = 0;
   dQC = 0;
   dQW = 0;
@@ -404,12 +429,13 @@ function renderDQ() {
     document.getElementById('dqcard').innerHTML = `<div class="card" style="text-align:center;color:var(--red2)">題庫載入失敗或內容不足，請返回主選單確認。</div>`;
     return;
   }
+  Dungeon.currentQ = qItem.data; // 儲存當前題目，避免詳解錯亂
   renderGrammarQ(qItem.data);
 }
 
 function renderGrammarQ(q) {
   const labels = ['A', 'B', 'C', 'D'];
-  let title = "🛡 結構邏輯診斷";
+  let title = q.isReview ? "🔄 弱點強化複習" : "🛡️ 結構邏輯診斷";
   let contentHtml = "";
   switch (q.type) {
     case 'fill':
@@ -456,7 +482,7 @@ function selDQ(btn, type, sel, cor, evt) {
   dAnswered = true;
   dQTot++;
   const ok = String(sel) === String(cor);
-  const q = gPool[(gIdx - 1 + gPool.length) % gPool.length];
+  const q = Dungeon.currentQ; // 改從 Dungeon.currentQ 獲取正確的題目資訊
   const reward = getDungeonReward();
 
   if (ok) {
@@ -488,6 +514,21 @@ function selDQ(btn, type, sel, cor, evt) {
     if (q && q.type) {
       if (!player.stats.typeStats[q.type]) player.stats.typeStats[q.type] = { c: 0, w: 0 };
       player.stats.typeStats[q.type].w++;
+    }
+
+    // 加入錯誤佇列，設定在 3 題之後重新出現
+    if (q && !q.isReview) { // 如果已經是複習題又錯了，可以考慮是否要繼續排隊，這裡先設定非複習題才加入
+        Dungeon.wrongQueue.push({
+            question: q,
+            waitCount: 3 // 等待 3 題
+        });
+        console.log(`[Dungeon] 題目 ${q.id} 加入錯誤佇列，將在 3 題後出現`);
+    } else if (q && q.isReview) {
+        // 如果複習題又錯，再次加入佇列，縮短間隔
+        Dungeon.wrongQueue.push({
+            question: q,
+            waitCount: 2 
+        });
     }
   }
 

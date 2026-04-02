@@ -300,9 +300,19 @@ function updateDungeonBar() {
 
 // 載入遺器數據
 function loadArtifacts() {
+  if (!player) return; // 確保 player 已初始化
   player.miraclePoints = player.miraclePoints || 0;
   player.artifacts = player.artifacts || {};
   player.artifactsDrawnCount = player.artifactsDrawnCount || 0;
 }
 
-loadArtifacts();
+// 監聽存儲就緒事件
+if (typeof onStorageReady === 'undefined') {
+  window.onStorageReady = loadArtifacts;
+} else {
+  const oldOnStorageReady = onStorageReady;
+  window.onStorageReady = function() {
+    oldOnStorageReady();
+    loadArtifacts();
+  };
+}
