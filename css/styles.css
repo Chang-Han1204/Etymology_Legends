@@ -260,6 +260,9 @@ body::after {
 .main-tab:last-child { border-right: none; }
 .main-tab:hover { background: var(--panel2); color: var(--text2); }
 .main-tab.active { background: var(--panel2); color: var(--torch2); border-bottom: 2px solid var(--torch); }
+.main-tab:nth-child(3) .tab-ico { /* 遺器分頁 */
+  color: var(--gold2);
+}
 .tab-ico { font-size: 15px; }
 
 /* ══════════════
@@ -324,19 +327,43 @@ body::after {
 .btn-green { background:var(--green);  color:#d0ffd0; border-color:var(--green2);}
 .btn-purple{ background:var(--purple); color:#f0d0ff; border-color:var(--purple2);}
 .btn-gray  { background:var(--panel3); color:var(--text2); border-color:var(--border2);}
-.btn-sm { padding:5px 10px; font-size:9px; box-shadow:2px 2px 0 rgba(0,0,0,.8); }
+.btn-sm { padding:5px 10px; font-size:10px; box-shadow:2px 2px 0 rgba(0,0,0,.8); }
 .btn-row {
   display:flex; 
-  gap:4px; 
+  gap:6px; 
   flex-wrap:wrap; /* Allow buttons to wrap to next line */
   justify-content:center; /* Center the buttons */
   align-items:flex-start; /* Align items to the start of the cross axis */
 }
 
 .btn-row .btn.btn-sm {
-  min-width: 85px; /* Ensure buttons have a minimum width */
+  min-width: 80px; /* 稍微縮小最小寬度以容納更多按鈕 */
   height: auto;    /* Allow height to adjust */
-  white-space: normal; /* Allow text to wrap within the button */
+  white-space: nowrap; /* 防止名稱換行導致按鈕過高 */
+}
+
+/* 召喚按鈕專用優化 */
+.summon-btn {
+  padding: 6px 4px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  flex: 1 1 22%; /* 讓按鈕在寬度足夠時自動分配空間 */
+  min-width: 75px !important;
+}
+
+.summon-btn .el-icon {
+  font-size: 12px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.element-hint {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  margin-top: 8px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 /* ══════════════
@@ -559,18 +586,38 @@ body::after {
 }
 .upgrade-name {
   font-family: var(--font-px);
-  font-size: 10px;
+  font-size: 14px;
   color: var(--gold2);
 }
+.upgrade-name small {
+  font-size: 12px;
+  margin-left: 5px;
+}
+.upgrade-info .total-lv {
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--font-vt);
+}
 .upgrade-lv {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--cyan2);
   font-family: var(--font-px);
 }
 .upgrade-desc {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text2);
-  line-height: 1.4;
+  line-height: 1.5;
+}
+.upgrade-desc strong {
+  font-size: 18px;
+  margin: 0 4px;
+}
+.upgrade-desc strong.val-atk { color: var(--gold2); }
+.upgrade-desc strong.val-hp { color: var(--green2); }
+.upgrade-desc strong.val-elem { color: var(--cyan2); }
+.upgrade-desc small {
+  font-size: 13px;
+  color: var(--text3);
 }
 .upgrade-row {
   display: flex;
@@ -637,22 +684,31 @@ body::after {
 }
 
 .stat-mini-lbl {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--text2);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .stat-mini-val {
   font-family: var(--font-vt);
-  font-size: 18px;
+  font-size: 20px;
   color: var(--text);
 }
 
 .stat-mini-val small {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text3);
   margin-left: 4px;
 }
+
+/* Bonus text in stats */
+.bonus-text {
+  font-size: 13px;
+  margin-left: 4px;
+}
+#detail-exp .bonus-text { color: var(--cyan2); }
+#detail-reward .bonus-text { color: var(--gold2); }
+#detail-hp .bonus-text { color: var(--red2); }
 .stat-box {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -846,4 +902,120 @@ select option { background:var(--panel); }
   .inv-grid { grid-template-columns:repeat(4,1fr); }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
   .main-tab { font-size:5px; padding:8px 4px; }
+}
+
+/* ══════════════
+   ARTIFACTS TAB STYLES
+══════════════ */
+.artifact-item {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s;
+}
+
+.artifact-item:hover {
+  border-color: var(--gold);
+}
+
+.artifact-name {
+  font-family: var(--font-px);
+  font-size: 16px;
+  color: var(--gold2);
+  font-weight: bold;
+}
+
+.artifact-level {
+  font-size: 13px;
+  color: var(--text3);
+}
+
+.artifact-description {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.artifact-effect {
+  font-size: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.artifact-effect .current {
+  color: var(--cyan);
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.artifact-effect .next {
+  color: var(--text3);
+  font-size: 12px;
+}
+
+/* Artifact Draw & Sacrifice Zone */
+.artifact-draw-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.artifact-draw-row .stat-mini-box {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 64px; /* 與按鈕高度一致 */
+}
+
+.draw-btn {
+  flex: 1.2;
+  font-size: 18px !important;
+  padding: 0 12px !important;
+  height: 64px; /* 固定高度以確保對齊 */
+}
+
+.sacrifice-zone {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px dashed var(--border);
+  text-align: center;
+}
+
+.sacrifice-btn {
+  font-size: 14px !important;
+  padding: 10px 20px !important;
+  margin-bottom: 8px;
+}
+
+.sacrifice-hint {
+  font-size: 13px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+/* Adjust artifact list grid for better spacing */
+#mod-artifacts #artifact-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding-right: 4px;
+}
+
+@media(min-width: 600px) {
+  #mod-artifacts #artifact-list {
+    grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
+  }
 }

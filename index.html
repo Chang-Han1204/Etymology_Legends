@@ -59,6 +59,9 @@
     <button class="main-tab" onclick="mainTab('upgrade')">
       <span class="tab-ico">💎</span>強化
     </button>
+    <button class="main-tab" onclick="mainTab('artifacts')">
+      <span class="tab-ico">✨</span>遺器
+    </button>
     <button class="main-tab" onclick="mainTab('data')">
       <span class="tab-ico">💾</span>資料
     </button>
@@ -110,44 +113,44 @@
       <div class="card" style="margin-bottom:8px; padding:8px">
         <div class="q-head" style="margin-bottom:5px">🛡️ 召喚士兵</div>
         <div class="btn-row" style="justify-content:space-around; gap: 4px;">
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士 (T1): 地屬性，基礎近戰">
-            🗡️ 戰士 ($100)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-warrior" onclick="summonSoldier('warrior')" title="戰士 (T1): 地屬性，基礎近戰">
+            🗡️ 戰士 ($100)<br><span class="el-icon">🌿</span>
           </button>
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-rock_thrower" onclick="summonSoldier('rock_thrower')" title="投石者 (T2): 地屬性，遠程攻擊">
-            🪨 投石 ($250)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-rock_thrower" onclick="summonSoldier('rock_thrower')" title="投石者 (T2): 地屬性，遠程攻擊">
+            🪨 投石 ($250)<br><span class="el-icon">🌿</span>
           </button>
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士 (T3): 地屬性，高生命坦克">
-            🛡️ 聖騎 ($450)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-paladin" onclick="summonSoldier('paladin')" title="聖騎士 (T3): 地屬性，高生命坦克">
+            🛡️ 聖騎 ($450)<br><span class="el-icon">🌿</span>
           </button>
-          <button class="btn btn-sm btn-gray el-earth" id="btn-summon-hero" onclick="summonSoldier('hero')" title="大地英雄 (T4): 地屬性，終極單位">
-            ✨ 英雄 ($750)<br><small style="font-size:8px;">🌿</small>
+          <button class="btn btn-sm btn-gray el-earth summon-btn" id="btn-summon-hero" onclick="summonSoldier('hero')" title="大地英雄 (T4): 地屬性，終極單位">
+            ✨ 英雄 ($750)<br><span class="el-icon">🌿</span>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手 (T1): 水屬性，遠程射手">
-            🏹 弓手 ($100)<br><small style="font-size:8px;">💧</small>
+          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-archer" onclick="summonSoldier('archer')" title="弓箭手 (T1): 水屬性，遠程射手">
+            🏹 弓手 ($100)<br><span class="el-icon">💧</span>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客 (T2): 水屬性，高速爆發">
-            🔪 刺客 ($250)<br><small style="font-size:8px;">💧</small>
+          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-assassin" onclick="summonSoldier('assassin')" title="刺客 (T2): 水屬性，高速爆發">
+            🔪 刺客 ($250)<br><span class="el-icon">💧</span>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客 (T3): 水屬性，快速近戰">
-            👻 幽靈 ($450)<br><small style="font-size:8px;">💧</small>
+          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-ghost" onclick="summonSoldier('ghost')" title="幽靈刺客 (T3): 水屬性，快速近戰">
+            👻 幽靈 ($450)<br><span class="el-icon">💧</span>
           </button>
-          <button class="btn btn-sm btn-gray el-water" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="大主祭 (T4): 水屬性，遠程高傷">
-            ⚕️ 主祭 ($750)<br><small style="font-size:8px;">💧</small>
+          <button class="btn btn-sm btn-gray el-water summon-btn" id="btn-summon-cleric" onclick="summonSoldier('cleric')" title="大主祭 (T4): 水屬性，遠程高傷">
+            ⚕️ 主祭 ($750)<br><span class="el-icon">💧</span>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師 (T1): 火屬性，遠程魔法">
-            🧙 魔法 ($100)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-mage" onclick="summonSoldier('mage')" title="魔法師 (T1): 火屬性，遠程魔法">
+            🧙 魔法 ($100)<br><span class="el-icon">🔥</span>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神 (T2): 火屬性，近戰收割">
-            💀 死神 ($250)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-reaper" onclick="summonSoldier('reaper')" title="死神 (T2): 火屬性，近戰收割">
+            💀 死神 ($250)<br><span class="el-icon">🔥</span>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-knight" onclick="summonSoldier('knight')" title="烈焰騎士 (T3): 火屬性，攻防一體">
-            🐎 騎士 ($450)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-knight" onclick="summonSoldier('knight')" title="烈焰騎士 (T3): 火屬性，攻防一體">
+            🐎 騎士 ($450)<br><span class="el-icon">🔥</span>
           </button>
-          <button class="btn btn-sm btn-gray el-fire" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主 (T4): 火屬性，終極破壞">
-            🐉 龍領 ($750)<br><small style="font-size:8px;">🔥</small>
+          <button class="btn btn-sm btn-gray el-fire summon-btn" id="btn-summon-dragonlord" onclick="summonSoldier('dragonlord')" title="龍領主 (T4): 火屬性，終極破壞">
+            🐉 龍領 ($750)<br><span class="el-icon">🔥</span>
           </button>
         </div>
-        <div style="font-size:9px; color:var(--text3); text-align:center; margin-top:5px">
+        <div class="element-hint">
           剋制：💧 > 🔥 > 🌿 > 💧 (傷害 200% / 50%)
         </div>
       </div>
@@ -198,6 +201,27 @@
     </div>
   </div>
 
+  <!-- ════════ ARTIFACTS TAB ════════ -->
+  <div id="mod-artifacts" class="section">
+    <div class="card">
+      <div class="card-title" style="color:var(--gold2)">✨ 遺器系統</div>
+      <div class="artifact-draw-row">
+        <div class="stat-mini-box">
+          <div class="stat-mini-lbl">奇蹟點數</div>
+          <div class="stat-mini-val" id="char-miracle-points">0</div>
+        </div>
+        <button class="btn btn-gold draw-btn" onclick="drawArtifact()">🔮 抽取遺器</button>
+      </div>
+      <div id="artifact-list">
+        <!-- 遺器列表將由 JS 動態渲染 -->
+      </div>
+      <div class="sacrifice-zone">
+        <button class="btn btn-red sacrifice-btn" onclick="sacrifice()">🔥 進行獻祭 (Lv.10+)</button>
+        <div class="sacrifice-hint">獻祭將重置等級並根據當前等級獲得奇蹟點數</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ════════ DATA TAB ════════ -->
   <div id="mod-data" class="section">
 
@@ -229,6 +253,10 @@
               <div class="stat-mini-lbl">💔 答錯懲罰</div>
               <div class="stat-mini-val" id="detail-penalty">10</div>
             </div>
+            <div class="stat-mini-box">
+              <div class="stat-mini-lbl">🏰 主堡生命值</div>
+              <div class="stat-mini-val" id="detail-hp">100</div>
+            </div>
           </div>
           <p style="margin-bottom:5px">💡 <strong style="color:var(--gold2)">成長機制：</strong>領主等級越高，答對英文題目時獲得的金幣就越多（50 + 等級×5），讓您能更快速召喚強力單位。然而，答錯時主堡受到的傷害將固定為 10 點。</p>
           <p>🛡️ <strong style="color:var(--cyan2)">守護城堡：</strong>妥善利用金幣召喚不同屬性的士兵。地、水、火三屬性間存在克制關係，正確的戰略佈署才是獲勝關鍵。</p>
@@ -253,6 +281,7 @@
 <!-- ════════════════ SCRIPTS ════════════════ -->
 <script src="js/utils.js"></script>
 <script src="js/data.js"></script>
+<script src="js/artifacts.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/player.js"></script>
 <script src="js/dungeon.js"></script>
@@ -263,3 +292,4 @@
 <script src="js/pixels.js"></script>
 
 </body>
+</html>

@@ -1,5 +1,5 @@
-const cvs = document.getElementById('battle-canvas');
-const ctx2 = cvs.getContext('2d');
+const cvs = document.getElementById("battle-canvas");
+const ctx2 = cvs.getContext("2d");
 window.cvW = 0;
 window.cvH = 0;
 
@@ -9,31 +9,31 @@ function resizeCanvas() {
   cvs.width = Math.round(window.cvW * window.devicePixelRatio);
   cvs.height = Math.round(window.cvH * window.devicePixelRatio);
   ctx2.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-  cvs.style.height = window.cvH + 'px';
+  cvs.style.height = window.cvH + "px";
   //dLog(`[Canvas] resizeCanvas: cvW=${window.cvW}, cvH=${window.cvH}`);
 }
-window.addEventListener('resize', () => { resizeCanvas(); if (!animFrame) renderBattleCanvas(); });
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', resizeCanvas);
+window.addEventListener("resize", () => { resizeCanvas(); if (!animFrame) renderBattleCanvas(); });
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", resizeCanvas);
 else resizeCanvas();
 
 const spriteCache = {};
 
 function createCachedSprite(spec, px, flipX = false, element = null) {
-  const key = `${spec.name || 'unknown'}-${px}-${flipX}-${element || 'none'}`;
+  const key = `${spec.name || "unknown"}-${px}-${flipX}-${element || "none"}`;
   if (spriteCache[key]) return spriteCache[key];
 
   const { pixels, colors } = spec;
   const rows = pixels.length, cols = pixels[0].length;
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = Math.round(cols * px);
   canvas.height = Math.round(rows * px);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const ci = pixels[r][c];
-      if (ci === 0 || !colors[ci] || colors[ci] === 'transparent') continue;
+      if (ci === 0 || !colors[ci] || colors[ci] === "transparent") continue;
       
       let color = colors[ci];
       // 如果有屬性，對非透明色進行微調
@@ -82,7 +82,7 @@ function getEnemySprite(enemy) {
   if (!enemy) return null;
   const n = enemy.name || "";
   const cls = enemy.class || "";
-  if (cls === 'FINAL BOSS' || cls === 'BOSS') return CHAR_SPRITES.boss;
+  if (cls === "FINAL BOSS" || cls === "BOSS") return CHAR_SPRITES.boss;
   // 新增的敵人外觀判斷
   if (enemy.sprite && CHAR_SPRITES[enemy.sprite]) return CHAR_SPRITES[enemy.sprite];
 
@@ -92,14 +92,14 @@ function getEnemySprite(enemy) {
   if (n.includes("蜘蛛") || n.includes("語法蜘蛛")) return CHAR_SPRITES.spider;
   if (n.includes("惡魔") || n.includes("句型") || n.includes("被動") || n.includes("假設") || n.includes("支配")) return CHAR_SPRITES.demon;
   if (n.includes("巨型") || n.includes("詞根")) return CHAR_SPRITES.dragon;
-  if (cls === '精英') return CHAR_SPRITES.demon;
-  if (cls === '進階') return CHAR_SPRITES.dragon;
-  if (cls === '中級') return CHAR_SPRITES.skeleton;
+  if (cls === "精英") return CHAR_SPRITES.demon;
+  if (cls === "進階") return CHAR_SPRITES.dragon;
+  if (cls === "中級") return CHAR_SPRITES.skeleton;
   return CHAR_SPRITES.slime;
 }
 
 function getPlayerSprite() {
-  const lv = (typeof player !== 'undefined' && player?.lv) || 1;
+  const lv = (typeof player !== "undefined" && player?.lv) || 1;
   return lv >= 8 ? CHAR_SPRITES.mage : CHAR_SPRITES.player;
 }
 
@@ -109,7 +109,7 @@ function getSoldierSprite(s) {
   return CHAR_SPRITES.player; // 戰士使用預設外觀
 }
 
-let battleAnim = { playerShake:0, enemyShake:0, flash:0, flashColor:'#fff', bg:0, particles:[], floats:[], torchT:0 };
+let battleAnim = { playerShake:0, enemyShake:0, flash:0, flashColor:"#fff", bg:0, particles:[], floats:[], torchT:0 };
 let animFrame = null;
 
 function drawCastleHpBar(x, y, px) {
@@ -119,11 +119,11 @@ function drawCastleHpBar(x, y, px) {
   const h = px * 1.5; // 維持較短高度
   
   // 背景/邊框
-  ctx2.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx2.fillStyle = "rgba(0,0,0,0.8)";
   ctx2.fillRect(x - w/2, y, w, h);
   
   // 血量條
-  const barColor = pct > 0.6 ? '#4cbc4c' : (pct > 0.3 ? '#eab830' : '#f03040');
+  const barColor = pct > 0.6 ? "#4cbc4c" : (pct > 0.3 ? "#eab830" : "#f03040");
   ctx2.fillStyle = barColor;
   const fillW = Math.max(0, (w - 2) * pct);
   ctx2.fillRect(x - w - 12, y - 20, fillW, h - 2);
@@ -151,8 +151,8 @@ function renderBattleCanvas() {
   
   // 背景漸層：極致深邃的夜空
   const skyGrad = ctx2.createLinearGradient(0, 0, 0, H);
-  skyGrad.addColorStop(0, '#050505');
-  skyGrad.addColorStop(1, '#101015');
+  skyGrad.addColorStop(0, "#050505");
+  skyGrad.addColorStop(1, "#101015");
   ctx2.fillStyle = skyGrad;
   ctx2.fillRect(0, 0, W, H);
 
@@ -220,33 +220,33 @@ function renderBattleCanvas() {
     });
   } else {
     // 標題畫面：渲染文字
-    ctx2.textAlign = 'center';
-    ctx2.textBaseline = 'middle';
+    ctx2.textAlign = "center";
+    ctx2.textBaseline = "middle";
     const centerX = W / 2;
     const centerY = H / 2;
 
     // 標題發光背景
     const titleGlow = ctx2.createRadialGradient(centerX, centerY, 0, centerX, centerY, px * 40);
-    titleGlow.addColorStop(0, 'rgba(241, 196, 15, 0.15)');
-    titleGlow.addColorStop(1, 'transparent');
+    titleGlow.addColorStop(0, "rgba(241, 196, 15, 0.15)");
+    titleGlow.addColorStop(1, "transparent");
     ctx2.fillStyle = titleGlow;
     ctx2.fillRect(0, 0, W, H);
 
     // 主標題
     ctx2.font = `italic bold ${px * 10}px "Georgia", serif`;
-    ctx2.shadowColor = 'black';
+    ctx2.shadowColor = "black";
     ctx2.shadowBlur = 10;
     const textGrad = ctx2.createLinearGradient(centerX - px * 20, 0, centerX + px * 20, 0);
-    textGrad.addColorStop(0, '#5dade2'); 
-    textGrad.addColorStop(1, '#ec7063');
+    textGrad.addColorStop(0, "#5dade2"); 
+    textGrad.addColorStop(1, "#ec7063");
     ctx2.fillStyle = textGrad;
-    ctx2.fillText('Etymology Legends', centerX, centerY - px * 2);
+    ctx2.fillText("Etymology Legends", centerX, centerY - px * 2);
 
     // 副標題
     ctx2.shadowBlur = 0;
     ctx2.font = `bold ${px * 3.5}px monospace`;
-    ctx2.fillStyle = '#f1c40f';
-    ctx2.fillText('🛡️ DEFEND THE ROOT ⚔️', centerX, centerY + px * 6);
+    ctx2.fillStyle = "#f1c40f";
+    ctx2.fillText("🛡️ DEFEND THE ROOT ⚔️", centerX, centerY + px * 6);
   }
 
   // 粒子與特效 (限制最大數量以提升效能)
@@ -254,7 +254,8 @@ function renderBattleCanvas() {
   battleAnim.particles = battleAnim.particles.filter(p => {
     p.x += p.vx; p.y += p.vy; p.life -= 0.038; p.vy += 0.15;
     if (p.life <= 0) return false;
-    ctx2.globalAlpha = Math.max(0, p.life); ctx2.fillStyle = p.color;
+    ctx2.globalAlpha = Math.max(0, p.life);
+    ctx2.fillStyle = p.color;
     ctx2.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
     ctx2.globalAlpha = 1; return true;
   });
@@ -267,9 +268,9 @@ function renderBattleCanvas() {
     ctx2.globalAlpha = Math.min(1, f.life * 2);
     ctx2.fillStyle = f.color;
     ctx2.font = `bold ${f.size || 12}px "Silkscreen", "Press Start 2P", monospace`;
-    ctx2.textAlign = 'center';
+    ctx2.textAlign = "center";
     // 加上文字描邊，增加可讀性
-    ctx2.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx2.strokeStyle = "rgba(0,0,0,0.8)";
     ctx2.lineWidth = 2;
     ctx2.strokeText(f.text, f.x, f.y);
     ctx2.fillText(f.text, f.x, f.y);
@@ -281,9 +282,37 @@ function renderBattleCanvas() {
   animFrame = requestAnimationFrame(renderBattleCanvas);
 }
 
+function spawnFloat(text, x, y, color = 'var(--gold)', tag = null) {
+  if (typeof battleAnim !== 'undefined' && battleAnim.floats) {
+    let existingFloat = null;
+    if (tag) {
+      existingFloat = battleAnim.floats.find(f => f.tag === tag);
+    }
+
+    if (existingFloat) {
+      existingFloat.text = text;
+      existingFloat.x = x;
+      existingFloat.y = y;
+      existingFloat.color = color.startsWith('var') ? '#f1c40f' : color; 
+      existingFloat.life = 1.0; // 重置生命週期
+      existingFloat.size = text.includes('+') ? 14 : 12;
+    } else {
+      battleAnim.floats.push({
+        text: text,
+        x: x,
+        y: y,
+        color: color.startsWith('var') ? '#f1c40f' : color, 
+        life: 1.0,
+        size: text.includes('+') ? 14 : 12,
+        tag: tag // 新增 tag 屬性
+      });
+    }
+  }
+}
+
 function drawUnitHp(x, y, hp, max, color) {
   const w = 24;
-  ctx2.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx2.fillStyle = "rgba(0,0,0,0.6)";
   ctx2.fillRect(x, y, w, 4);
   const hpW = Math.max(0, (w - 2) * (hp / max));
   ctx2.fillStyle = color;
@@ -352,10 +381,10 @@ function updateBattleLogic() {
     });
 
     if (nearestEnemy) {
-      s.state = 'atk';
+      s.state = "atk";
       s.atkTimer = (s.atkTimer || 0) + 1;
       // 根據職業調整攻擊速度 (弓箭手較快)
-      const atkSpeed = s.id === 'archer' ? 40 : 60;
+      const atkSpeed = s.id === "archer" ? 40 : 60;
       if (s.atkTimer > atkSpeed) {
         // 屬性計算
         let finalAtk = s.atk;
@@ -518,17 +547,17 @@ if (typeof ETYMOLOGY_LEGENDS_TITLE === "undefined") {
       [...Array(60).fill(3), ...Array(60).fill(4)], // 30 (原 35)
     ],
     colors: [
-      'transparent',
-      '#ffffff',
-      '#ffffff',
-      '#1b3022',
-      '#2d1616'
+      "transparent",
+      "#ffffff",
+      "#ffffff",
+      "#1b3022",
+      "#2d1616"
     ]
   };
 }
 
 // 解決 renderBattleCanvas is not defined 的問題
 // 確保 renderBattleCanvas 函數被正確調用
-if (typeof renderBattleCanvas !== 'function') {
+if (typeof renderBattleCanvas !== "function") {
   window.renderBattleCanvas = renderBattleCanvas; // 將其暴露為全局函數
 }

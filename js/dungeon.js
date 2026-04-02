@@ -168,9 +168,9 @@ function buildPools() {
   if (unused.length === 0) {
     const filteredIds = filtered.map(q => q.id);
     gUsedIds = gUsedIds.filter(id => !filteredIds.includes(id));
-    unused = filtered;
+    unused = shuffle([...filtered]); // Add a shuffle here
     saveUsedIdsToLS();
-    console.log('[Dungeon] 篩選池已全部看過，重置該池的已看過狀態');
+    console.log('[Dungeon] 篩選池已全部看過，重置該池的已看過狀態並重新洗牌');
   }
 
   gPool = shuffle(unused);
@@ -237,9 +237,16 @@ function startDungeon() {
   resetDungeonState();
   Dungeon.active = true;
   Dungeon.wave = 1;
-  Dungeon.gold = 300;
-  Dungeon.castleHp = 200;
-  Dungeon.maxCastleHp = 200;
+
+  // 應用遺器起始金錢加成
+  const artifactStartingGold = typeof getArtifactEffect === 'function' ? getArtifactEffect("startingGold") : 0;
+  Dungeon.gold = 300 + Math.round(artifactStartingGold);
+
+  // 應用遺器主堡生命值加成
+  const baseCastleHp = 200;
+  const artifactHpBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("mainCastleHp") : 0;
+  Dungeon.maxCastleHp = baseCastleHp + Math.round(artifactHpBonus);
+  Dungeon.castleHp = Dungeon.maxCastleHp;
   
   beginBattle();
 }
@@ -325,6 +332,10 @@ function summonSoldier(type) {
   const bonusHp = (up.hp || 0) * 20;
   const bonusElem = (up.elem || 0) * 0.05;
   
+  // 應用遺器效果：攻速
+  const artifactAtkSpdBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("soldierAttackSpeed") : 0;
+  const finalSpeedMultiplier = 1 + artifactAtkSpdBonus;
+
   // 士兵從左側建築物門口 (與封面樣式對齊)
   // 使用邏輯座標 (0-120)，門口位置修正為較左側的 c=8
   const spawnX = 8;
@@ -336,6 +347,8 @@ function summonSoldier(type) {
     maxHp: spec.hp + bonusHp,
     atk: spec.atk + bonusAtk,
     elem_strength: (spec.elem_strength || 1.0) + bonusElem,
+    speed: spec.speed * finalSpeedMultiplier, // 提升移動速度
+    atkSpeedMultiplier: finalSpeedMultiplier, // 用於戰鬥邏輯
     x: spawnX,
     targetX: 75, // 目標是畫面中央 (c=75 附近)
     state: "move",
@@ -343,7 +356,7 @@ function summonSoldier(type) {
     element: spec.element
   };
   Dungeon.soldiers.push(s);
-  updateBattleUI();
+    updateBattleUI();
   dLog(`🛡️ 召喚了${spec.name} (LV.${(up.atk||0)+(up.hp||0)+(up.elem||0)})！`, "log-info");
 }
 
@@ -416,7 +429,9 @@ function renderGrammarQ(q) {
 }
 
 function getDungeonReward() {
-  return 50 + (player.lv * 5);
+  const baseReward = 50 + (player.lv * 5);
+  const artifactBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("quizGold") : 0;
+  return Math.round(baseReward + artifactBonus);
 }
 
 function selDQ(btn, type, sel, cor, evt) {
@@ -482,6 +497,12 @@ function selDQ(btn, type, sel, cor, evt) {
     } else if (q.type === "job_define" && q.question) {
       // Explicitly for 'job_define', speak the question
       sentenceToSpeak = q.question;
+    } else if (q.type === "response_choice" && q.question) {
+      // 將 A: [question] 與 B: [correct answer] 結合播放
+      const dialogueParts = q.question.split('|');
+      const partA = dialogueParts[0].trim();
+      const partB = q.options[q.answer].trim();
+      sentenceToSpeak = `${partA}. ${partB}`;
     } else if (q.question) {
       if (q.question.includes("___") && q.options && q.answer !== undefined) {
         sentenceToSpeak = q.question.replace("___", q.options[q.answer]);
@@ -491,7 +512,7 @@ function selDQ(btn, type, sel, cor, evt) {
       sentenceToSpeak = sentenceToSpeak.replace(/\|/g, " ");
     }
     if (sentenceToSpeak && sentenceToSpeak.trim() !== "") {
-      console.log(`[語音播放] 播放內容 (job_define 修正後): "${sentenceToSpeak}"`); // Debugging log
+      console.log(`[語音播放] 播放內容: "${sentenceToSpeak}"`);
       speak(sentenceToSpeak);
     }
   }
@@ -520,7 +541,11 @@ function endGame() {
   if (!player) return;
 
   const lvBonus = 1 + ((player.lv || 1) - 1) * 0.1;
-  const rewardGems = Math.round(((wavesCompleted * 10) + (roundCorrect * 2)) * lvBonus);
+
+  // 應用遺器效果：寶石獲取
+  const artifactGemBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("gemGain") : 0;
+  
+  const rewardGems = Math.round(((wavesCompleted * 10) + (roundCorrect * 2)) * lvBonus + artifactGemBonus);
   
   player.gems = (player.gems || 0) + rewardGems;
   player.stats = player.stats || {};

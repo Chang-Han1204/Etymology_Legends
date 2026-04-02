@@ -87,7 +87,7 @@ function showTip(el, word) {
   el.style.position = 'relative';
   el.appendChild(tip);
   activeTip = tip;
-  speak(word);
+  // speak(word); // 移除點擊選項文字時的語音播放功能
   const close = (e) => {
     if (!el.contains(e.target)) {
       removeTip();
@@ -109,7 +109,8 @@ function mkCW(text) {
     const word = m[1];
     const k = word.toLowerCase().replace(/[^a-z]/g, '');
     if (k && k.length >= 2) {
-      parts.push(`<span class="cw" onclick="event.stopPropagation();showTip(this,'${word.replace(/'/g, "\\'")}')">${esc(word)}</span>`);
+      // 移除點擊單字顯示提示與撥放語音的功能，改回一般顯示
+      parts.push(`<span class="cw">${esc(word)}</span>`);
     } else {
       parts.push(esc(word));
     }
@@ -137,4 +138,3 @@ function loadLS(key, def) {
 function saveLS(k, d) {
   localStorage.setItem(k, JSON.stringify(d));
 }
-

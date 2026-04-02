@@ -17,9 +17,39 @@ function renderDataPanel() {
   const dPenalty = document.getElementById('detail-penalty');
   
   if (dLv) dLv.textContent = player.lv || 1;
-  if (dExp) dExp.textContent = `${player.exp || 0} / ${player.expNext || 100}`;
-  if (dReward) dReward.textContent = `💰 ${50 + (player.lv || 1) * 5}`;
+  
+  const expBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("expGain") : 0;
+  if (dExp) {
+    if (expBonus > 0) {
+      dExp.innerHTML = `${player.exp || 0} / ${player.expNext || 100} <small class="bonus-text">(加成: +${(expBonus * 100).toFixed(0)}%)</small>`;
+    } else {
+      dExp.textContent = `${player.exp || 0} / ${player.expNext || 100}`;
+    }
+  }
+
+  // 整合遺器加成到賞金顯示
+  const baseReward = 50 + (player.lv || 1) * 5;
+  const artifactRewardBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("quizGold") : 0;
+  const finalReward = baseReward + artifactRewardBonus;
+  
+  if (dReward) {
+    if (artifactRewardBonus > 0) {
+      dReward.innerHTML = `💰 ${finalReward.toFixed(0)} <small class="bonus-text">(+${artifactRewardBonus.toFixed(0)})</small>`;
+    } else {
+      dReward.textContent = `💰 ${finalReward.toFixed(0)}`;
+    }
+  }
+  
   if (dPenalty) dPenalty.textContent = `💔 ${10}`;
+
+  // 更新主堡血量顯示 (如果有的話)
+  const dHp = document.getElementById('detail-hp');
+  if (dHp) {
+    const baseHp = (typeof CLASSES !== 'undefined' ? CLASSES.player.baseHp : 100);
+    const artifactHpBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("mainCastleHp") : 0;
+    const finalHp = baseHp + artifactHpBonus;
+    dHp.innerHTML = `❤️ ${finalHp.toFixed(0)} <small class="bonus-text">(+${artifactHpBonus.toFixed(0)})</small>`;
+  }
 
   // 詳細統計
   const container = document.getElementById('new-stats-container');
@@ -45,7 +75,7 @@ function renderDataPanel() {
       <div class="stat-mini-lbl">${typeMap[type] || type}</div>
       <div class="stat-mini-val">${ts.c}/${tTotal} <small>(${tRate}%)</small></div>
     </div>`;
-  }).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text3);font-size:12px">尚無學習數據</div>';
+  }).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text3);font-size:14px">尚無學習數據</div>';
 
   const elemHtml = Object.keys(s.elementStats || {}).map(el => {
     const icons = { Water: '💧', Fire: '🔥', Earth: '🌿' };
@@ -93,7 +123,8 @@ function renderGList() {
 let modalFile = '';
 
 function closeModal() {
-  document.getElementById('export-modal').classList.remove('open');
+  const el = document.getElementById('export-modal');
+  if (el) el.classList.remove('open');
 }
 
 function resetAll() {
@@ -121,9 +152,11 @@ function resetAll() {
 
 function copyModal() {
   const t = document.getElementById('modal-txt');
-  t.select();
-  document.execCommand('copy');
-  toast('📋 已複製', 'var(--gold)');
+  if (t) {
+    t.select();
+    document.execCommand('copy');
+    toast('📋 已複製', 'var(--gold)');
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -191,9 +224,9 @@ function updateCharacterInfo() {
   
   if (lvEl) lvEl.textContent = player.lv || 1;
   if (expEl) expEl.textContent = player.exp || 0;
-  if (atkEl) atkEl.textContent = getAtk();
-  if (defEl) defEl.textContent = getDef();
-  if (maxhpEl) maxhpEl.textContent = getMaxHp();
+  if (atkEl) atkEl.textContent = typeof getAtk === 'function' ? getAtk() : 0;
+  if (defEl) defEl.textContent = typeof getDef === 'function' ? getDef() : 0;
+  if (maxhpEl) maxhpEl.textContent = typeof getMaxHp === 'function' ? getMaxHp() : 100;
   
   // 更新進度資訊
   const floorEl = document.getElementById('char-floor');
@@ -210,7 +243,7 @@ function updateCharacterInfo() {
 // TABS
 // ══════════════════════════════════════════════
 function mainTab(id) {
-  ['dungeon', 'character', 'data', 'upgrade'].forEach(k => {
+  ['dungeon', 'character', 'data', 'upgrade', 'artifacts'].forEach(k => {
     const el = document.getElementById('mod-' + k);
     if (el) el.classList.toggle('active', k === id);
   });
@@ -225,6 +258,12 @@ function mainTab(id) {
 
   if (id === 'upgrade') {
     renderUpgradeMenu();
+  }
+
+  if (id === 'artifacts') {
+    if (typeof renderArtifactList === 'function') renderArtifactList();
+    const mp = document.getElementById('char-miracle-points');
+    if (mp) mp.textContent = player.miraclePoints || 0;
   }
   
   // 更新資料子頁面
@@ -254,6 +293,8 @@ function renderUpgradeMenu(filterEl) {
     mage: "🧙", reaper: "💀", knight: "🐎", dragonlord: "🐉"
   };
 
+  if (typeof UNIT_TYPES === 'undefined') return;
+
   // 根據屬性過濾士兵
   const units = Object.keys(UNIT_TYPES).filter(id => UNIT_TYPES[id].element.toUpperCase() === currentUpgradeElement);
 
@@ -271,32 +312,32 @@ function renderUpgradeMenu(filterEl) {
     const costElem = (up.elem + 1) * 30;
     
     const elKey = spec.element.toUpperCase();
-    const elInfo = ELEMENTS[elKey] || { icon: '❓', color: '#fff' };
+    const elInfo = (typeof ELEMENTS !== 'undefined' && ELEMENTS[elKey]) || { icon: '❓', color: '#fff' };
 
     return `
       <div class="upgrade-item" style="border-left: 4px solid ${elInfo.color}">
         <div class="upgrade-info">
-          <span class="upgrade-name">${icon} ${spec.name} <small style="color:${elInfo.color}">${elInfo.icon}${elInfo.name}</small></span>
-          <span style="font-size:10px; color:var(--text3)">總等級: ${up.atk + up.hp + up.elem}</span>
+          <span class="upgrade-name">${icon} ${spec.name} <small style="color:${elInfo.color}">${elInfo.icon}${elInfo.name || elKey}</small></span>
+          <span class="total-lv">總等級: ${up.atk + up.hp + up.elem}</span>
         </div>
         
         <div class="upgrade-row">
           <div class="upgrade-desc">
-            攻擊力: <strong style="color:var(--gold2)">${curAtk}</strong> <small>(LV.${up.atk})</small>
+            攻擊力: <strong class="val-atk">${curAtk}</strong> <small>(LV.${up.atk})</small>
           </div>
           <button class="btn btn-sm btn-gold" onclick="buyUpgrade('${id}', 'atk', ${costAtk})">強化 (${costAtk}💎)</button>
         </div>
         
         <div class="upgrade-row">
           <div class="upgrade-desc">
-            生命值: <strong style="color:var(--green2)">${curHp}</strong> <small>(LV.${up.hp})</small>
+            生命值: <strong class="val-hp">${curHp}</strong> <small>(LV.${up.hp})</small>
           </div>
           <button class="btn btn-sm btn-gold" onclick="buyUpgrade('${id}', 'hp', ${costHp})">強化 (${costHp}💎)</button>
         </div>
         
         <div class="upgrade-row">
           <div class="upgrade-desc" title="提高剋制屬性時的傷害倍率">
-            屬性強度: <strong style="color:var(--cyan2)">x${curElem.toFixed(2)}</strong> <small>(LV.${up.elem})</small>
+            屬性強度: <strong class="val-elem">x${curElem.toFixed(2)}</strong> <small>(LV.${up.elem})</small>
           </div>
           <button class="btn btn-sm btn-gold" onclick="buyUpgrade('${id}', 'elem', ${costElem})">強化 (${costElem}💎)</button>
         </div>
