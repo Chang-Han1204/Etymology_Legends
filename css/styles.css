@@ -346,13 +346,15 @@ body::after {
 .summon-btn {
   padding: 4px 2px !important;
   font-size: 10px !important;
-  line-height: 1.1 !important;
-  flex: 1 1 23%; /* 稍微增加寬度佔比，嘗試每行 4 個 */
-  min-width: 65px !important;
+  line-height: 1.2 !important;
+  flex: 1 1 22%; /* 預設每行約 4 個 */
+  min-width: 70px !important;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  word-break: break-word; /* 允許單字內換行防止溢出 */
 }
 
 .summon-btn .el-icon {
@@ -907,12 +909,13 @@ select option { background:var(--panel); }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
   .main-tab { font-size:5px; padding:8px 4px; }
   
-  /* 召喚按鈕在手機版更進一步縮小 */
+  /* 召喚按鈕在手機版調整為每行 2 個，以騰出足夠空間顯示文字 */
   .summon-btn {
-    flex: 1 1 30% !important; /* 手機版每行顯示 3 個 */
-    min-width: 60px !important;
-    font-size: 9px !important;
-    padding: 3px 1px !important;
+    flex: 1 1 46% !important; 
+    min-width: 100px !important;
+    font-size: 11px !important; /* 寬度增加後字體可以稍微調大，反而更好讀 */
+    padding: 6px 4px !important;
+    margin-bottom: 4px;
   }
 }
 
