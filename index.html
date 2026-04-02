@@ -53,17 +53,25 @@
 
   <!-- MAIN TABS -->
   <div class="main-tabs">
-    <button class="main-tab active" onclick="mainTab('dungeon')">
+    <button id="tab-btn-dungeon" class="main-tab active" onclick="mainTab('dungeon')">
       <span class="tab-ico">⚔️</span>地下城
     </button>
-    <button class="main-tab" onclick="mainTab('upgrade')">
+    <button id="tab-btn-upgrade" class="main-tab" onclick="mainTab('upgrade')">
       <span class="tab-ico">💎</span>強化
     </button>
-    <button class="main-tab" onclick="mainTab('artifacts')">
+    <button id="tab-btn-artifacts" class="main-tab" onclick="mainTab('artifacts')">
       <span class="tab-ico">✨</span>遺器
     </button>
-    <button class="main-tab" onclick="mainTab('data')">
+    <button id="tab-btn-data" class="main-tab" onclick="mainTab('data')">
       <span class="tab-ico">💾</span>資料
+    </button>
+
+    <!-- Battle Only Tabs (Hidden by default) -->
+    <button id="tab-btn-quiz" class="main-tab" style="display:none" onclick="switchBattleSubTab('quiz')">
+      <span class="tab-ico">📝</span>試煉
+    </button>
+    <button id="tab-btn-summon" class="main-tab" style="display:none" onclick="switchBattleSubTab('summon')">
+      <span class="tab-ico">🛡️</span>部署
     </button>
   </div><!-- /main-tabs -->
   </div><!-- /app-chrome -->
@@ -109,6 +117,13 @@
         </div>
       </div>
 
+      <!-- Battle Sub-Panels -->
+      <div id="battle-sub-quiz">
+        <div class="q-card" id="dqcard"></div>
+        <div id="dqfb" style="display:none"></div>
+      </div>
+
+      <div id="battle-sub-summon" style="display:none">
       <!-- Summon Interface -->
       <div class="card" style="margin-bottom:8px; padding:8px">
         <div class="q-head" style="margin-bottom:5px">🛡️ 召喚士兵</div>
@@ -171,9 +186,7 @@
           剋制：💧 > 🔥 > 🌿 > 💧 (傷害 200% / 50%)
         </div>
       </div>
-
-      <div class="q-card" id="dqcard"></div>
-      <div id="dqfb" style="display:none"></div>
+      </div> <!-- /battle-sub-summon -->
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div id="dqnxt" style="display:none">
@@ -272,7 +285,7 @@
             </div>
             <div class="stat-mini-box">
               <div class="stat-mini-lbl">🏰 主堡生命值</div>
-              <div class="stat-mini-val" id="detail-hp">100</div>
+              <div class="stat-mini-val" id="detail-hp">200</div>
             </div>
           </div>
           <p style="margin-bottom:5px">💡 <strong style="color:var(--gold2)">成長機制：</strong>領主等級越高，答對英文題目時獲得的金幣就越多（50 + 等級×5），讓您能更快速召喚強力單位。然而，答錯時主堡受到的傷害將固定為 10 點。</p>

@@ -45,7 +45,7 @@ function renderDataPanel() {
   // 更新主堡血量顯示 (如果有的話)
   const dHp = document.getElementById('detail-hp');
   if (dHp) {
-    const baseHp = (typeof CLASSES !== 'undefined' ? CLASSES.player.baseHp : 100);
+    const baseHp = (typeof CLASSES !== 'undefined' ? CLASSES.player.baseHp : 200);
     const artifactHpBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("mainCastleHp") : 0;
     const finalHp = baseHp + artifactHpBonus;
     dHp.innerHTML = `❤️ ${finalHp.toFixed(0)} <small class="bonus-text">(+${artifactHpBonus.toFixed(0)})</small>`;
@@ -226,7 +226,7 @@ function updateCharacterInfo() {
   if (expEl) expEl.textContent = player.exp || 0;
   if (atkEl) atkEl.textContent = typeof getAtk === 'function' ? getAtk() : 0;
   if (defEl) defEl.textContent = typeof getDef === 'function' ? getDef() : 0;
-  if (maxhpEl) maxhpEl.textContent = typeof getMaxHp === 'function' ? getMaxHp() : 100;
+  if (maxhpEl) maxhpEl.textContent = typeof getMaxHp === 'function' ? getMaxHp() : 200;
   
   // 更新進度資訊
   const floorEl = document.getElementById('char-floor');
@@ -248,7 +248,9 @@ function mainTab(id) {
     if (el) el.classList.toggle('active', k === id);
   });
   document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
-  const btn = document.querySelector(`.main-tab[onclick*="'${id}'"]`);
+  
+  // 嘗試透過 ID 尋找按鈕，如果沒有 ID 則透過屬性尋找 (維持向後相容)
+  const btn = document.getElementById(`tab-btn-${id}`) || document.querySelector(`.main-tab[onclick*="'${id}'"]`);
   if (btn) btn.classList.add('active');
   
   // 更新角色資訊
@@ -270,6 +272,39 @@ function mainTab(id) {
   if (id === 'data') {
     renderDataPanel();
   }
+}
+
+function toggleBattleTabs(inBattle) {
+  const normalTabs = ['dungeon', 'upgrade', 'artifacts', 'data'];
+  const battleTabs = ['quiz', 'summon'];
+
+  normalTabs.forEach(id => {
+    const el = document.getElementById(`tab-btn-${id}`);
+    if (el) el.style.display = inBattle ? 'none' : 'inline-block';
+  });
+
+  battleTabs.forEach(id => {
+    const el = document.getElementById(`tab-btn-${id}`);
+    if (el) el.style.display = inBattle ? 'inline-block' : 'none';
+  });
+
+  if (inBattle) {
+    switchBattleSubTab('quiz');
+  } else {
+    mainTab('dungeon');
+  }
+}
+
+function switchBattleSubTab(id) {
+  const quizTab = document.getElementById('battle-sub-quiz');
+  const summonTab = document.getElementById('battle-sub-summon');
+  
+  if (quizTab) quizTab.style.display = (id === 'quiz') ? 'block' : 'none';
+  if (summonTab) summonTab.style.display = (id === 'summon') ? 'block' : 'none';
+
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`tab-btn-${id}`);
+  if (btn) btn.classList.add('active');
 }
 
 let currentUpgradeElement = 'EARTH';

@@ -74,6 +74,18 @@ const ARTIFACTS = {
       [1, 0, 1],
       [1, 1, 1]
     ] // 捲軸形狀，可調整
+  },
+  "artifact_turn_hp_recover": {
+    name: "生命源泉",
+    description: "每回合回復更多主堡生命值",
+    baseEffect: 2, // 初始每回合額外回復2點HP
+    scaling: 1.1, // 每級提升1.1倍
+    effectType: "turnHpRecover",
+    pixelArt: [
+      [0, 1, 0],
+      [1, 1, 1],
+      [0, 1, 0]
+    ] // 水滴形狀
   }
   // 可以繼續擴展更多遺器
 };
@@ -127,7 +139,8 @@ function getArtifactIcon(key) {
     "artifact_quiz_gold": "🪙",
     "artifact_soldier_atk_spd": "🪽",
     "artifact_gem_gain": "💎",
-    "artifact_exp_gain": "📜"
+    "artifact_exp_gain": "📜",
+    "artifact_turn_hp_recover": "💧"
   };
   return icons[key] || "✨";
 }
@@ -152,6 +165,8 @@ function getArtifactEffectDescription(artifact, value) {
       return `寶石獲取: +${value.toFixed(0)}`;
     case "expGain":
       return `經驗獲取: +${(value * 100).toFixed(0)}%`;
+    case "turnHpRecover":
+      return `每回合回復: +${value.toFixed(0)}`;
     default:
       return `效果: ${value.toFixed(1)}`;
   }

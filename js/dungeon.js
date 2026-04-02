@@ -5,8 +5,8 @@ const Dungeon = {
   active: false,
   wave: 1,
   gold: 0,
-  castleHp: 300,
-  maxCastleHp: 300,
+  castleHp: 200,
+  maxCastleHp: 200,
   soldiers: [],
   enemies: [],
   correctCount: 0,
@@ -240,7 +240,7 @@ function startDungeon() {
 
   // 應用遺器起始金錢加成
   const artifactStartingGold = typeof getArtifactEffect === 'function' ? getArtifactEffect("startingGold") : 0;
-  Dungeon.gold = 300 + Math.round(artifactStartingGold);
+  Dungeon.gold = 200 + Math.round(artifactStartingGold);
 
   // 應用遺器主堡生命值加成
   const baseCastleHp = 200;
@@ -256,6 +256,10 @@ function beginBattle() {
   const contBtn = document.getElementById('btn-res-continue');
   if (contBtn) contBtn.style.display = 'block';
   dqshow('dq-active');
+  
+  // 切換到戰鬥專用分頁
+  if (typeof toggleBattleTabs === 'function') toggleBattleTabs(true);
+
   dLog(`⚔️ 戰鬥開始！賺取金幣來召喚士兵。`, 'log-warn');
   updateBattleUI();
   startNextWave();
@@ -274,7 +278,7 @@ function startNextWave() {
   if (Dungeon.wave % 10 === 0) {
     Dungeon.isBossWave = true;
     dLog(`🚨 BOSS 波次 #${Dungeon.wave / 10} 正在靠近！`, 'log-red');
-    toast(`🚨 BOSS 波次 #${Dungeon.wave / 10}！`, 'var(--red)');
+  toast(`🚨 BOSS 波次 #${Dungeon.wave / 10}！`, 'var(--red)');
     // Boss 警告效果，3秒後自動消失
     const bossOv = document.getElementById('boss-ov');
     if (bossOv) {
@@ -289,6 +293,19 @@ function startNextWave() {
     const bossOv = document.getElementById('boss-ov');
     if (bossOv) bossOv.classList.remove('show');
   }
+
+  // 每回合回復主堡生命值
+  const hpRecoverAmount = 5; // 基礎回復量
+  const artifactHpRecoverBonus = typeof getArtifactEffect === 'function' ? getArtifactEffect("turnHpRecover") : 0;
+  const finalHpRecover = hpRecoverAmount + Math.round(artifactHpRecoverBonus);
+  const actualRecover = Math.min(finalHpRecover, Dungeon.maxCastleHp - Dungeon.castleHp);
+  
+  if (actualRecover > 0) {
+    Dungeon.castleHp += actualRecover;
+    dLog(`主堡回復了 ${actualRecover} 點生命。`, 'log-info');
+    spawnFloat(`+${actualRecover}HP`, 30, cvH * 0.5, 'var(--green)');
+  }
+  
   updateBattleUI();
 }
 
@@ -451,7 +468,7 @@ function selDQ(btn, type, sel, cor, evt) {
     Dungeon.correctCount = (Dungeon.correctCount || 0) + 1;
     Dungeon.gold += reward;
     sfxCorrect();
-    spawnFloat(`+$${reward}`, cvW * 0.5, cvH * 0.5, 'var(--gold)');
+    spawnFloat(`+$${reward}`, cvW * 0.5, cvH * 0.45, 'var(--gold)'); // 上移金錢顯示
     updateBattleUI();
     gStats.correct = (gStats.correct || 0) + 1;
     if (q && q.type) {
@@ -530,6 +547,10 @@ function continueDungeon() {
 function exitDungeon() {
   resetDungeonState();
   dqshow("dq-start");
+  
+  // 恢復正常分頁
+  if (typeof toggleBattleTabs === 'function') toggleBattleTabs(false);
+
   saveAll();
   dLog("🏃 已返回主選單。", "log-info");
 }
@@ -556,6 +577,10 @@ function endGame() {
   player.stats.maxCombo = Math.max(player.stats.maxCombo || 0, player.maxCombo || 0, player.combo || 0);
 
   dqshow("dq-result");
+  
+  // 恢復正常分頁
+  if (typeof toggleBattleTabs === 'function') toggleBattleTabs(false);
+
   const updateResultUI = () => {
     const resIco = document.getElementById("res-ico");
     if (resIco) resIco.textContent = "";

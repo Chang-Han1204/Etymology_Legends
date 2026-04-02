@@ -53,7 +53,7 @@ const CLASSES = {
     id: 'player',
     name: '冒險者',
     lv: 1,
-    baseHp: 100,
+    baseHp: 200,
     baseAtk: 10,
     baseDef: 5,
     abilities: [],

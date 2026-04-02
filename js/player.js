@@ -7,7 +7,7 @@ function gainExp(amt, x, y) {
   const expGainArtifactEffect = getArtifactEffect("expGain");
   total = Math.round(total * (1 + expGainArtifactEffect)); // 應用經驗值獲取遺器效果
   player.exp = (player.exp || 0) + total;
-  spawnFloat("+" + total + " EXP", x || cvW / 2, y || cvH * 0.5, "var(--gold)", "exp-gain");
+  spawnFloat("+" + total + " EXP", x || cvW / 2, y || cvH * 0.55, "var(--gold)", "exp-gain"); // 下移經驗值顯示
   
   const expDisp = document.getElementById("exp-disp");
   if (expDisp) expDisp.textContent = player.exp;
