@@ -930,7 +930,7 @@ select option { background:var(--panel); }
   .title-px { font-size:7px; }
   .inv-grid { grid-template-columns:repeat(4,1fr); }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
-  .main-tab { font-size:12px; padding:8px 4px; }
+  .main-tab { font-size:16px !important; padding:8px 4px; }
   
   /* 手機版召喚按鈕完全單欄化，確保文字空間充足 */
   .summon-btn {
